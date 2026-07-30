@@ -139,7 +139,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     }
   };
 
-  // ─── Direct In-App Activation ───
+  // ─── Step 3 Activation with Live Stripe Checkout ───
   const handleActivate = async () => {
     if (!selectedNumber) {
       setError('Please select a mobile number.');
@@ -150,7 +150,31 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     try {
       const numToUse = selectedNumber.phone_number;
 
-      // Process Direct £0.50 Payment
+      // Save Onboarding details
+      await completeOnboarding({
+        entrance_video_url: videoUrl,
+        phone_number: numToUse,
+        twilio_number_sid: 'PN_demo_' + Math.random().toString(36).substring(7),
+        country_code: country,
+      }).catch(() => null);
+
+      // Create Live Stripe Checkout Session with signup email
+      const stripeRes = await createStripeCheckoutSession({
+        client_id: clientId || 1,
+        email: email,
+        payment_method: paymentMethod,
+        card_last4: "4242",
+        plan_type: "weekly",
+        amount: weeklyCharge?.weekly_charge || 0.50,
+        currency: "GBP"
+      }).catch(() => null);
+
+      if (stripeRes && stripeRes.checkout_url) {
+        window.location.href = stripeRes.checkout_url;
+        return;
+      }
+
+      // Fallback local processing if Stripe offline
       await processCheckout({
         client_id: clientId || 1,
         email: email,
@@ -161,14 +185,6 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         currency: "GBP"
       });
 
-      // Complete Onboarding
-      await completeOnboarding({
-        entrance_video_url: videoUrl,
-        phone_number: numToUse,
-        twilio_number_sid: 'PN_demo_' + Math.random().toString(36).substring(7),
-        country_code: country,
-      });
-
       localStorage.setItem('admin_authenticated', 'true');
       localStorage.setItem('app_view', 'dashboard');
       setActivated(true);
@@ -177,7 +193,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         onComplete();
       }, 1500);
     } catch (err) {
-      setError('Activation failed. Please check your details.');
+      setError('Activation failed. Please try again.');
     } finally {
       setActivating(false);
     }
