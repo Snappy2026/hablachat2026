@@ -182,11 +182,11 @@ def seed_demo_data():
         if db.query(Session).count() > 0:
             return
 
-        # Session 1: Needs Review (Discount / Custom Request)
+        # Session 1: Discount Request (Needs Review)
         s1 = Session(
-            phone_number="+14155552671",
+            phone_number="+14155551234",
             channel="whatsapp",
-            client_name="Jessica Miller",
+            client_name="Marcus Vance",
             unread_count=1,
             last_message_at=datetime.datetime.utcnow() - datetime.timedelta(minutes=15)
         )
@@ -197,7 +197,7 @@ def seed_demo_data():
         m1_in = Message(
             session_id=s1.id,
             sender="client",
-            content="Hi! I want to book a 90-minute Hot Stone massage for tomorrow at 4pm. Can you give me a 20% discount since it's my birthday?",
+            content="Hi babe! Can I book 60 mins for tomorrow at 4pm? Can you give me a discount for my birthday?",
             intent="custom_request",
             confidence=0.74,
             status="pending_review",
@@ -210,8 +210,8 @@ def seed_demo_data():
         r1 = ReviewItem(
             message_id=m1_in.id,
             session_id=s1.id,
-            proposed_reply="Happy Birthday! We love celebrating birthdays with our guests. While our 90-minute Hot Stone massage is normally $150, I would be happy to check with our studio manager to apply a special $15 birthday discount token for your session tomorrow at 4:00 PM!",
-            review_reason="Birthday discount inquiry requires manager approval.",
+            proposed_reply="Sorry babe i dont do discounts, only in person and when you spend more than 1 hour x",
+            review_reason="Discount negotiation flagged for manager review.",
             confidence=0.74,
             intent="custom_request",
             status="pending",
@@ -234,7 +234,7 @@ def seed_demo_data():
         m2_in = Message(
             session_id=s2.id,
             sender="client",
-            content="Hello, do you have any availability for a 60 min Deep Tissue massage this Saturday at 11am?",
+            content="Hiya, do you have any availability for 60 mins this Saturday at 11am?",
             intent="booking_inquiry",
             confidence=0.96,
             status="processed",
@@ -245,7 +245,7 @@ def seed_demo_data():
         m2_out = Message(
             session_id=s2.id,
             sender="bot",
-            content="Hi David! Yes, we have an 11:00 AM slot available for a 60-minute Deep Tissue Massage ($90) this Saturday. Shall I confirm this reservation for you?",
+            content="Hi babe, I can do Saturday at 11:00 AM! Let me know if that time works for you and how long you'd like.\nthanks babe x",
             intent="booking_inquiry",
             confidence=0.96,
             status="sent",
@@ -258,7 +258,7 @@ def seed_demo_data():
             session_id=s2.id,
             client_name="David Chen",
             phone_number="+14155559812",
-            service_name="Deep Tissue Massage",
+            service_name="60 mins Session",
             booking_date="This Saturday",
             booking_time="11:00 AM",
             duration_minutes=60,
@@ -283,9 +283,9 @@ def seed_demo_data():
         m3_in = Message(
             session_id=s3.id,
             sender="client",
-            content="I was charged twice on my credit card for yesterday's appointment! I need someone to call me immediately or refund my money.",
+            content="I was charged twice yesterday! I need someone to help me or refund my money.",
             intent="complaint",
-            confidence=0.91,
+            confidence=0.80,
             status="pending_review",
             timestamp=datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
         )
@@ -296,9 +296,9 @@ def seed_demo_data():
         r3 = ReviewItem(
             message_id=m3_in.id,
             session_id=s3.id,
-            proposed_reply="Dear Amanda, we sincerely apologize for the inconvenience with your payment! I have immediately notified our General Manager who is reviewing your billing record right now and will call you directly at this phone number within 15 minutes to issue a full refund.",
-            review_reason="Billing complaint & refund request flagged for urgent human manager review.",
-            confidence=0.91,
+            proposed_reply="Hi babe, sorry to hear this x",
+            review_reason="Complaint flagged for manager review.",
+            confidence=0.80,
             intent="complaint",
             status="pending",
             created_at=datetime.datetime.utcnow() - datetime.timedelta(minutes=5)
