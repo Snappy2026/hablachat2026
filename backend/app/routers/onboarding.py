@@ -133,19 +133,6 @@ def get_current_client(db: DBSession = Depends(get_db)):
 def get_all_clients(db: DBSession = Depends(get_db)):
     """Master Admin: Get list of all registered clients and models."""
     clients = db.query(Client).order_by(Client.id.desc()).all()
-    if not clients:
-        # Return fallback demo client list if database has no rows
-        return [
-            {
-                "id": 1,
-                "model_name": "Anna (Primary Model Account)",
-                "email": "anna@hablachat.app",
-                "phone_number": "+1 (260) 366-0928",
-                "status": "active",
-                "onboarded_at": "2026-07-30T12:00:00Z",
-                "passcode": "8888"
-            }
-        ]
     return [
         {
             "id": c.id,

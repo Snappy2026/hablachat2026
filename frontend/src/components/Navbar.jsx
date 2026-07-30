@@ -20,15 +20,6 @@ export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, on
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
-          {/* Simulator Trigger */}
-          <button
-            onClick={onOpenSimulator}
-            className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-slate-700 transition"
-          >
-            <MessageSquareCode className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Test Bot</span>
-          </button>
-
           {/* Log Out Button */}
           <button
             onClick={onLogout}

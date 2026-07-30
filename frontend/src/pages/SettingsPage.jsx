@@ -337,14 +337,9 @@ export default function SettingsPage() {
                   (c.phone_number && c.phone_number.includes(searchTerm))
                 )
                 .length === 0 ? (
-                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                    <div>
-                      <p className="font-bold text-white">Anna (Primary Model Account)</p>
-                      <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
-                    </div>
+                  <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-center space-y-1">
+                    <p className="text-xs font-semibold text-slate-300">No registered member accounts yet</p>
+                    <p className="text-[11px] text-slate-500">New model signups and active subscriptions will appear here in real time.</p>
                   </div>
                 ) : (
                   clientList
