@@ -214,129 +214,13 @@ export default function SettingsPage() {
           />
         </div>
 
-        {/* Reply Library Manager Section */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-              <MessageSquare className="w-4 h-4 text-teal-400" />
-              <span>Simulation Reply Library</span>
-            </h3>
-            <a
-              href="/thinking-sheet.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[11px] text-teal-300 hover:text-white font-semibold bg-teal-950/80 hover:bg-teal-900 px-2.5 py-1 rounded-lg border border-teal-700/60 transition flex items-center gap-1"
-            >
-              🧠 Print Thinking Sheet
-            </a>
-          </div>
-          <p className="text-[11px] text-slate-400">
-            Define specific client inquiry triggers and your exact preferred responses.
-          </p>
-
-          {/* Stored Patterns List */}
-          <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
-            {replyPatterns.length === 0 ? (
-              <p className="text-center text-xs text-slate-500 py-3">No simulation patterns added yet.</p>
-            ) : (
-              replyPatterns.map((p) => (
-                <div key={p.id} className="p-3 bg-slate-950 rounded-xl border border-slate-800/90 flex items-start justify-between gap-2">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[10px] font-bold uppercase bg-slate-800 text-teal-300 px-2 py-0.5 rounded border border-slate-700">
-                        {p.category}
-                      </span>
-                      <span className="text-[11px] font-mono text-slate-300">Triggers: {p.keywords}</span>
-                    </div>
-                    <p className="text-xs text-emerald-200 font-normal italic leading-relaxed">
-                      "{p.preferred_reply}"
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => handleDeletePattern(p.id)}
-                    className="text-slate-500 hover:text-rose-400 p-1"
-                    title="Delete Pattern"
-                  >
-                    ✕
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Add New Simulation Pattern Form */}
-          <div className="pt-2 border-t border-slate-800 space-y-2">
-            <h4 className="text-xs font-semibold text-slate-300">Add New Simulation Reply Rule</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={newCategory}
-                onChange={(e) => setNewCategory(e.target.value)}
-                placeholder="Category (e.g. arrival, pricing)"
-                className="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white"
-              />
-              <input
-                type="text"
-                value={newKeywords}
-                onChange={(e) => setNewKeywords(e.target.value)}
-                placeholder="Keywords (e.g. in the street, door number)"
-                className="bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white"
-              />
-            </div>
-            <textarea
-              value={newReply}
-              onChange={(e) => setNewReply(e.target.value)}
-              rows={2}
-              placeholder="Exact preferred response to send..."
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-white"
-            />
-            <button
-              type="button"
-              onClick={handleAddPattern}
-              disabled={!newKeywords.trim() || !newReply.trim()}
-              className="w-full bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-emerald-400 font-semibold text-xs py-2 rounded-xl border border-slate-700 transition"
-            >
-              + Add Simulation Rule to Library
-            </button>
-          </div>
-        </div>
-
-        {/* API Credentials Health Status */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-2.5">
-          <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-            <Key className="w-4 h-4 text-teal-400" />
-            <span>System Connections</span>
-          </h3>
-
-          <div className="flex items-center justify-between text-xs p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-            <span className="text-slate-300 font-medium">Anthropic Claude (Haiku 4.5) (`claude-3-5-haiku-20241022`)</span>
-            {settingsData?.anthropic_api_key_configured || settingsData?.moonshot_api_key_configured ? (
-              <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-                <CheckCircle className="w-3.5 h-3.5" /> API Ready
-              </span>
-            ) : (
-              <span className="text-amber-400 flex items-center gap-1 font-medium">
-                <AlertCircle className="w-3.5 h-3.5" /> Simulator Engine Active
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between text-xs p-2.5 bg-slate-950 rounded-xl border border-slate-800">
-            <span className="text-slate-300 font-medium">Twilio Account SID (`ACa77d0d3...`)</span>
-            <span className="text-emerald-400 flex items-center gap-1 font-semibold">
-              <CheckCircle className="w-3.5 h-3.5" /> Account Linked
-            </span>
-          </div>
-        </div>
-
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs py-3 rounded-xl shadow-lg flex items-center justify-center gap-2 transition"
+          className="w-full bg-red-600 hover:bg-red-500 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg flex items-center justify-center gap-2 transition active:scale-95"
         >
           <Save className="w-4 h-4" />
-          <span>{loading ? 'Saving Settings...' : 'Save Language & Tone Settings'}</span>
+          <span>{loading ? 'Saving Setup...' : 'Save Setup Settings'}</span>
         </button>
 
         {savedMsg && (
