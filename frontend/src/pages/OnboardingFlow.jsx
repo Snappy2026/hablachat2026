@@ -548,6 +548,19 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     </>
                   )}
                 </button>
+
+                {/* Direct Failsafe Bypass Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    localStorage.setItem('admin_authenticated', 'true');
+                    localStorage.setItem('app_view', 'dashboard');
+                    if (onComplete) onComplete();
+                  }}
+                  className="w-full bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-slate-800 transition active:scale-95 flex items-center justify-center gap-1.5"
+                >
+                  🚀 Skip & Open Dashboard Directly
+                </button>
               </div>
             )}
 
