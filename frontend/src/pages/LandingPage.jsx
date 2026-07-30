@@ -151,7 +151,7 @@ const TRANSLATIONS = {
   }
 };
 
-export default function LandingPage({ onGetStarted, weeklyCharge }) {
+export default function LandingPage({ onGetStarted, weeklyCharge, onOpenAdmin = () => {} }) {
   const [lang, setLang] = useState('en');
   const [isLangOpen, setIsLangOpen] = useState(false);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.en;
