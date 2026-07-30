@@ -9,12 +9,14 @@ import BookingsPage from './pages/BookingsPage';
 import SettingsPage from './pages/SettingsPage';
 import LandingPage from './pages/LandingPage';
 import OnboardingFlow from './pages/OnboardingFlow';
+import PublicChatPage from './pages/PublicChatPage';
 import { getPendingReviews, approveReview, rejectReview, getOnboardingStatus, getWeeklyCharge } from './services/api';
 import { wsService } from './services/websocket';
 
 export default function App() {
-  // App view: 'landing' | 'onboarding' | 'dashboard'
+  // App view: 'landing' | 'onboarding' | 'dashboard' | 'public_chat'
   const [appView, setAppView] = useState('landing');
+  const [chatModelName, setChatModelName] = useState('Anna');
   const [weeklyCharge, setWeeklyCharge] = useState(0.50);
 
   const [activeTab, setActiveTab] = useState('queue');
@@ -39,11 +41,20 @@ export default function App() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const viewParam = urlParams.get('view') || urlParams.get('admin');
+      const chatParam = urlParams.get('chat') || urlParams.get('model');
       const statusParam = urlParams.get('status');
       const isAuth = localStorage.getItem('admin_authenticated') === 'true';
       const savedView = localStorage.getItem('app_view');
 
       getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 0.50)).catch(() => {});
+
+      if (chatParam || window.location.pathname.startsWith('/chat/')) {
+        const pathName = window.location.pathname.replace('/chat/', '');
+        const targetName = chatParam || pathName || 'Anna';
+        setChatModelName(targetName);
+        setAppView('public_chat');
+        return;
+      }
 
       if (statusParam === 'success' || viewParam === 'dashboard' || viewParam === '1') {
         localStorage.setItem('admin_authenticated', 'true');
@@ -250,6 +261,11 @@ export default function App() {
         )}
       </div>
     );
+  }
+
+  // ─── Direct AI Web Chat ───
+  if (appView === 'public_chat') {
+    return <PublicChatPage modelName={chatModelName} />;
   }
 
   // ─── Onboarding Flow ───
