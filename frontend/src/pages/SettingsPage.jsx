@@ -139,32 +139,62 @@ export default function SettingsPage() {
       </div>
 
       {/* Active AI Mobile Line Display Card */}
-      <div className="glass-card p-4 rounded-2xl border border-red-800/60 bg-red-950/30 shadow-xl flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-red-900/50 flex-shrink-0">
-            <Smartphone className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-0.5">
-              <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-400">Assigned AI Mobile Number</span>
-              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
+      <div className="glass-card p-4 rounded-2xl border border-red-800/60 bg-red-950/30 shadow-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-red-900/50 flex-shrink-0">
+              <Smartphone className="w-5 h-5" />
             </div>
-            <p className="text-base font-mono font-bold text-white tracking-wide">
-              {assignedPhone || '+1 (260) 366-0928'}
-            </p>
+            <div>
+              <div className="flex items-center gap-2 mb-0.5">
+                <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-400">Assigned AI Mobile Line</span>
+                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
+              </div>
+              <p className="text-base font-mono font-bold text-white tracking-wide">
+                {assignedPhone || '+1 (260) 366-0928'}
+              </p>
+            </div>
           </div>
+          <button
+            type="button"
+            onClick={() => {
+              const num = assignedPhone || '+1 (260) 366-0928';
+              navigator.clipboard.writeText(num);
+              alert(`Copied AI Mobile Line: ${num}`);
+            }}
+            className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow-md active:scale-95 flex-shrink-0"
+          >
+            Copy Number
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            const num = assignedPhone || '+1 (260) 366-0928';
-            navigator.clipboard.writeText(num);
-            alert(`Copied AI Mobile Line: ${num}`);
-          }}
-          className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow-md active:scale-95 flex-shrink-0"
-        >
-          Copy Number
-        </button>
+
+        {/* 1-Click Directory Links: WhatsApp & SMS */}
+        <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+          <button
+            type="button"
+            onClick={() => {
+              const clean = (assignedPhone || '+12603660928').replace(/\D/g, '');
+              const waUrl = `https://wa.me/${clean}`;
+              navigator.clipboard.writeText(waUrl);
+              alert(`Copied WhatsApp Direct Link:\n${waUrl}\n\nPaste this onto your escort directory listing!`);
+            }}
+            className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/50 text-emerald-300 text-xs font-semibold py-2 px-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>💬 Copy WhatsApp Link</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              const clean = (assignedPhone || '+12603660928').replace(/\D/g, '');
+              const smsUrl = `sms:+${clean}`;
+              navigator.clipboard.writeText(smsUrl);
+              alert(`Copied Direct SMS Link:\n${smsUrl}\n\nPaste this onto your website!`);
+            }}
+            className="bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 text-xs font-semibold py-2 px-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
+          >
+            <span>📱 Copy SMS Link</span>
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-4">
