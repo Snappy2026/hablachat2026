@@ -1,0 +1,129 @@
+import datetime
+import logging
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session as DBSession
+
+from app.database import get_db
+from app.models import Client, BotSetting
+from app.schemas import (
+    ClientRegister, ClientOut, OnboardingStatusOut, OnboardingCompleteRequest
+)
+
+logger = logging.getLogger("onboarding_router")
+router = APIRouter(prefix="/api/onboarding", tags=["Client Onboarding"])
+
+
+def get_setting(db: DBSession, key: str, default: str) -> str:
+    s = db.query(BotSetting).filter(BotSetting.key == key).first()
+    return s.value if s else default
+
+
+@router.get("/status", response_model=OnboardingStatusOut)
+def get_onboarding_status(db: DBSession = Depends(get_db)):
+    """Check if any client has completed onboarding."""
+    client = db.query(Client).filter(Client.status == "active").first()
+
+    if client and client.onboarded_at:
+        return OnboardingStatusOut(
+            is_onboarded=True,
+            client=ClientOut.model_validate(client)
+        )
+
+    # Check for partially registered (not yet completed)
+    if client and not client.onboarded_at:
+        return OnboardingStatusOut(
+            is_onboarded=False,
+            client=ClientOut.model_validate(client)
+        )
+
+    return OnboardingStatusOut(is_onboarded=False, client=None)
+
+
+@router.get("/weekly-charge")
+def get_weekly_charge(db: DBSession = Depends(get_db)):
+    """Get the admin-configured weekly subscription charge."""
+    charge = get_setting(db, "weekly_charge", "75.00")
+    return {"weekly_charge": float(charge), "currency": "GBP", "symbol": "£"}
+
+
+@router.post("/register", response_model=ClientOut)
+def register_business(payload: ClientRegister, db: DBSession = Depends(get_db)):
+    """
+    Step 1: Register basic business details.
+    Creates or updates the client record.
+    """
+    # Check if email already registered
+    existing = db.query(Client).filter(Client.email == payload.email).first()
+    if existing:
+        # Update existing registration
+        existing.model_name = payload.model_name
+        existing.address = payload.address
+        existing.postcode = payload.postcode
+        db.commit()
+        db.refresh(existing)
+        return existing
+
+    weekly_charge = float(get_setting(db, "weekly_charge", "29.99"))
+
+    try:
+        client = Client(
+            model_name=payload.model_name,
+            email=payload.email,
+            address=payload.address,
+            postcode=payload.postcode,
+            weekly_charge=weekly_charge,
+            status="active"
+        )
+        db.add(client)
+        db.commit()
+        db.refresh(client)
+
+        logger.info(f"New client registered: {client.model_name} ({client.email})")
+        return client
+    except Exception:
+        db.rollback()
+        # Race condition: another request created it — fetch and update
+        existing = db.query(Client).filter(Client.email == payload.email).first()
+        if existing:
+            existing.model_name = payload.model_name
+            existing.address = payload.address
+            existing.postcode = payload.postcode
+            db.commit()
+            db.refresh(existing)
+            return existing
+        raise
+
+
+@router.post("/complete", response_model=ClientOut)
+def complete_onboarding(payload: OnboardingCompleteRequest, db: DBSession = Depends(get_db)):
+    """
+    Final step: Mark client as fully onboarded.
+    Saves video URL, phone number, and sets onboarded_at timestamp.
+    """
+    client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="No registered client found. Please complete Step 1 first.")
+
+    if payload.entrance_video_url:
+        client.entrance_video_url = payload.entrance_video_url
+
+    if payload.phone_number:
+        client.phone_number = payload.phone_number
+        client.twilio_number_sid = payload.twilio_number_sid
+        client.country_code = payload.country_code
+
+    client.onboarded_at = datetime.datetime.utcnow()
+    db.commit()
+    db.refresh(client)
+
+    logger.info(f"Client onboarding complete: {client.model_name} → {client.phone_number}")
+    return client
+
+
+@router.get("/client", response_model=ClientOut)
+def get_current_client(db: DBSession = Depends(get_db)):
+    """Get the current active client profile."""
+    client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="No client profile found.")
+    return client

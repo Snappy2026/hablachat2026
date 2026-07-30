@@ -1,0 +1,217 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+}
+
+/* Custom Utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Hide scrollbars for clean app feel */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* ─── Landing Page & Onboarding ─── */
+
+/* Animated red-black gradient hero background */
+.hero-gradient {
+  background: linear-gradient(
+    135deg,
+    #050505 0%,
+    #170509 25%,
+    #450a0a 50%,
+    #170509 75%,
+    #050505 100%
+  );
+  background-size: 400% 400%;
+  animation: gradientShift 12s ease-in-out infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Subtle floating animation for feature cards */
+.float-animation {
+  animation: floatUp 3s ease-in-out infinite;
+}
+.float-animation-delay-1 {
+  animation: floatUp 3s ease-in-out 0.5s infinite;
+}
+.float-animation-delay-2 {
+  animation: floatUp 3s ease-in-out 1s infinite;
+}
+
+@keyframes floatUp {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+/* Red glow border for selected items */
+.glow-border {
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.6), 0 0 20px rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.8);
+}
+
+/* Progress step indicator */
+.progress-step {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.progress-step.active {
+  background: linear-gradient(135deg, #dc2626, #e11d48);
+  box-shadow: 0 0 12px rgba(220, 38, 38, 0.4);
+}
+.progress-step.completed {
+  background: #dc2626;
+}
+
+/* Video upload drop zone */
+.upload-zone {
+  border: 2px dashed rgba(100, 116, 139, 0.5);
+  background: rgba(15, 23, 42, 0.5);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+.upload-zone:hover,
+.upload-zone.dragover {
+  border-color: rgba(220, 38, 38, 0.6);
+  background: rgba(220, 38, 38, 0.05);
+}
+
+/* Upload progress bar */
+.upload-progress-bar {
+  background: linear-gradient(90deg, #dc2626, #e11d48);
+  transition: width 0.3s ease;
+  border-radius: 9999px;
+  height: 4px;
+}
+
+/* Fade in animation */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* Staggered fade in */
+.animate-stagger-1 { animation-delay: 0.1s; opacity: 0; }
+.animate-stagger-2 { animation-delay: 0.2s; opacity: 0; }
+.animate-stagger-3 { animation-delay: 0.3s; opacity: 0; }
+.animate-stagger-4 { animation-delay: 0.4s; opacity: 0; }
+
+/* Pulse glow for CTA buttons */
+@keyframes pulseGlow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+  50% { box-shadow: 0 0 20px 4px rgba(220, 38, 38, 0.2); }
+}
+.pulse-glow {
+  animation: pulseGlow 2.5s ease-in-out infinite;
+}
+
+/* Success checkmark animation */
+@keyframes scaleCheck {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.animate-check {
+  animation: scaleCheck 0.5s ease-out forwards;
+}
+
+/* Number card hover effect */
+.number-card {
+  transition: all 0.2s ease;
+}
+.number-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.number-card.selected {
+  border-color: #dc2626;
+  box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.5), 0 0 16px rgba(220, 38, 38, 0.1);
+}
+
+/* ─── 3D High-End Mockup Depth Effects ─── */
+.text-glow-red {
+  color: #ff6b6b;
+  text-shadow: 0 0 25px rgba(248, 113, 113, 0.7), 0 0 10px rgba(248, 113, 113, 0.4);
+}
+
+.text-depth-white {
+  color: #ffffff;
+  text-shadow: 0 4px 14px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(0, 0, 0, 0.9);
+}
+
+.glass-3d-card {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.16) 0%, rgba(255, 255, 255, 0.04) 100%);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-top: 1px solid rgba(255, 255, 255, 0.45);
+  border-left: 1px solid rgba(255, 255, 255, 0.3);
+  border-right: 1px solid rgba(255, 255, 255, 0.12);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 25px 45px -10px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.glass-3d-card:hover {
+  transform: translateY(-4px);
+  border-top-color: rgba(255, 255, 255, 0.65);
+  box-shadow: 0 30px 50px -10px rgba(0, 0, 0, 0.9), 0 0 25px rgba(244, 63, 94, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.glass-sphere {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0.06) 100%);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.3), 0 10px 20px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.6);
+  transition: all 0.3s ease;
+}
+.glass-sphere:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 35px rgba(255, 255, 255, 0.5), 0 12px 24px rgba(0, 0, 0, 0.7);
+}
+
+.laser-beam-line {
+  background: linear-gradient(90deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.05) 100%);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.9), 0 0 4px rgba(255, 255, 255, 1);
+  height: 2px;
+}
+
+.cta-3d-card {
+  background: rgba(8, 8, 10, 0.88);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(244, 63, 94, 0.45);
+  box-shadow: 0 0 60px -5px rgba(244, 63, 94, 0.4), 0 30px 60px -12px rgba(0, 0, 0, 0.95), inset 0 0 30px rgba(244, 63, 94, 0.18);
+}

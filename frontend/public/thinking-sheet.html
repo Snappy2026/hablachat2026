@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Client Reply Thinking Sheet — Serenity AI</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+    :root {
+      --brand: #10b981;
+      --brand-light: #d1fae5;
+      --brand-dark: #065f46;
+      --purple: #8b5cf6;
+      --amber: #f59e0b;
+      --rose: #f43f5e;
+      --slate-50: #f8fafc;
+      --slate-100: #f1f5f9;
+      --slate-200: #e2e8f0;
+      --slate-300: #cbd5e1;
+      --slate-500: #64748b;
+      --slate-700: #334155;
+      --slate-800: #1e293b;
+      --slate-900: #0f172a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: var(--slate-800);
+      background: #fff;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    /* Print button bar */
+    .print-bar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: linear-gradient(135deg, var(--slate-900), #1a2744);
+      color: white;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0,0,0,.25);
+    }
+    .print-bar h1 {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .print-bar .badge {
+      background: var(--brand);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+    .print-bar button {
+      background: var(--brand);
+      color: white;
+      border: none;
+      padding: 10px 28px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all .15s;
+      letter-spacing: .3px;
+    }
+    .print-bar button:hover { background: #059669; transform: scale(1.03); }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 24px 40px;
+    }
+
+    /* Header */
+    .doc-header {
+      text-align: center;
+      margin-bottom: 28px;
+      padding-bottom: 20px;
+      border-bottom: 3px solid var(--brand);
+    }
+    .doc-header h1 {
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--slate-900);
+      letter-spacing: -0.5px;
+    }
+    .doc-header p {
+      color: var(--slate-500);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    /* Tone rules box */
+    .tone-box {
+      background: var(--brand-light);
+      border: 2px solid var(--brand);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+    }
+    .tone-box h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--brand-dark);
+      margin-bottom: 8px;
+    }
+    .tone-box table { width: 100%; border-collapse: collapse; }
+    .tone-box td {
+      padding: 5px 8px;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(16,185,129,.2);
+      vertical-align: top;
+    }
+    .tone-box td:first-child {
+      font-weight: 700;
+      color: var(--brand-dark);
+      width: 120px;
+      white-space: nowrap;
+    }
+
+    /* Category Section */
+    .category {
+      margin-bottom: 24px;
+      page-break-inside: avoid;
+    }
+    .category-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding: 8px 12px;
+      background: var(--slate-900);
+      color: white;
+      border-radius: 8px;
+    }
+    .category-header .emoji { font-size: 16px; }
+    .category-header h2 { font-size: 13px; font-weight: 700; }
+    .category-header .desc {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--slate-300);
+      margin-left: auto;
+      font-style: italic;
+    }
+
+    /* Tables */
+    table.reply-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1.5px solid var(--slate-200);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    table.reply-table thead th {
+      background: var(--slate-100);
+      color: var(--slate-700);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      padding: 7px 10px;
+      text-align: left;
+      border-bottom: 2px solid var(--slate-200);
+    }
+    table.reply-table thead th:first-child { width: 32px; text-align: center; }
+    table.reply-table thead th:nth-child(2) { width: 38%; }
+    table.reply-table thead th:nth-child(3) { width: auto; }
+    table.reply-table thead th:nth-child(4) { width: 90px; text-align: center; }
+
+    table.reply-table tbody td {
+      padding: 10px;
+      border-bottom: 1px solid var(--slate-200);
+      vertical-align: top;
+      font-size: 10.5px;
+    }
+    table.reply-table tbody td:first-child {
+      text-align: center;
+      font-weight: 700;
+      color: var(--slate-500);
+      font-size: 10px;
+    }
+    table.reply-table tbody tr.prefilled td:nth-child(2) {
+      color: var(--slate-700);
+      font-family: 'SF Mono', 'Menlo', monospace;
+      font-size: 9.5px;
+    }
+    table.reply-table tbody tr.prefilled td:nth-child(3) {
+      color: var(--brand-dark);
+      font-weight: 500;
+    }
+    table.reply-table tbody tr.empty td {
+      min-height: 44px;
+      height: 44px;
+      background: var(--slate-50);
+    }
+
+    .badge-auto {
+      display: inline-block;
+      background: var(--brand-light);
+      color: var(--brand-dark);
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+    .badge-review {
+      display: inline-block;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    /* Footer note */
+    .footer-note {
+      margin-top: 32px;
+      padding: 16px 20px;
+      background: #faf5ff;
+      border: 2px solid var(--purple);
+      border-radius: 12px;
+      font-size: 11px;
+      color: #5b21b6;
+    }
+    .footer-note strong { color: #4c1d95; }
+
+    /* Print styles */
+    @media print {
+      .print-bar { display: none !important; }
+      .container { padding: 0; max-width: 100%; }
+      body { font-size: 10px; }
+      .category { page-break-inside: avoid; }
+      .doc-header { margin-bottom: 20px; }
+      table.reply-table tbody tr.empty td { height: 36px; }
+    }
+
+    @page {
+      size: A4;
+      margin: 15mm;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Print Toolbar -->
+  <div class="print-bar">
+    <h1>
+      🧠 Client Reply Thinking Sheet
+      <span class="badge">Serenity AI</span>
+    </h1>
+    <button onclick="window.print()">📥 Download as PDF</button>
+  </div>
+
+  <div class="container">
+
+    <!-- Document Header -->
+    <div class="doc-header">
+      <h1>🧠 Client Reply Thinking Sheet</h1>
+      <p>Fill in every row with your exact client triggers & preferred replies — then hand back to wire into the bot.</p>
+    </div>
+
+    <!-- Global Tone Rules -->
+    <div class="tone-box">
+      <h3>📋 Global Tone Rules</h3>
+      <table>
+        <tr><td>Greeting</td><td><code>Hi babe,</code> (or <code>Hi [Name],</code> if name is known)</td></tr>
+        <tr><td>Sign-off</td><td><code>thanks babe x</code></td></tr>
+        <tr><td>Persona</td><td>First-person only ("I", "me", "my") — never "we" or "our team"</td></tr>
+        <tr><td>Style</td><td>Casual text message, short &amp; snappy, emojis OK</td></tr>
+      </table>
+    </div>
+
+    <!-- ============ CATEGORIES ============ -->
+
+    <!-- 1. Street Arrival -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🚪</span>
+        <h2>1. Street Arrival &amp; Door Number</h2>
+        <span class="desc">Client is physically outside and needs directions</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>1.1</td>
+            <td>im in the street, on the street, where now, im outside, i am outside, here now, im here, i am here, which door, door number, buzz, where do i go</td>
+            <td>Hi babe, I'm door number 5! Just buzz when you get to the door<br>thanks babe x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>1.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>1.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Short-Notice Availability -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">⏰</span>
+        <h2>2. Short-Notice Availability</h2>
+        <span class="desc">Client wants to come now or very soon</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>2.1</td>
+            <td>can i come, come in, come over, come now, come today, can i see you, see you in, see you now, free in, free now, are you free, free soon, available now, available today, in 15mins, in 20mins</td>
+            <td>Yes babe I can be available! Just message when you are in the street, you have my postcode<br>thanks babe x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>2.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>2.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 3. Pricing -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">💰</span>
+        <h2>3. Services &amp; Pricing</h2>
+        <span class="desc">Client asking about what you offer and how much</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>3.1</td>
+            <td>how much, rates, pricing, services, price list, price, cost, rate</td>
+            <td>Hi babe, here are my services and prices:<br>• 60 mins (£130), 30 mins (£80)<br>• Full Body Relaxation &amp; Stretch<br>• Aromatherapy &amp; Sensual Care<br>Let me know what time you are thinking to book and how long you would like!<br>thanks babe x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>3.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 4. Booking Request -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">📅</span>
+        <h2>4. Booking Request</h2>
+        <span class="desc">Client wants to book a specific date/time</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>4.1</td>
+            <td>book, appointment, reserve, schedule, tomorrow, slot</td>
+            <td>Hi babe, I can do [date] at [time]! Let me know if that time works for you and how long you'd like.<br>thanks babe x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>4.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>4.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 5. Reschedule -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🔄</span>
+        <h2>5. Reschedule / Change Time</h2>
+        <span class="desc">Client wants to move an existing booking</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>5.1</td>
+            <td>reschedule, change time, move appointment, move my booking, different time</td>
+            <td>Hi babe, I can definitely help you change or move your booking. Let me know what new time works for you!<br>thanks babe x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>5.2</td><td></td><td></td><td></td>    <!-- 6. Cancellation -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">❌</span>
+        <h2>6. Cancellation</h2>
+        <span class="desc">Client wants to cancel entirely</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>6.1</td>
+            <td>cancel, cancel my booking, dont want to come, not coming, different time</td>
+            <td>Hi babe, no worries we can do another time</td>
+            <td><span class="badge-review">⚠️ Review</span></td>
+          </tr>
+          <tr class="empty"><td>6.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 7. Discount -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🎁</span>
+        <h2>7. Discount / Deals / Negotiation</h2>
+        <span class="desc">Client trying to haggle or get a deal</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>7.1</td>
+            <td>discount, cheap, deal, negotiate, price match, is it free, for free</td>
+            <td>Sorry babe i dont do discounts, only in person and when you spend more than 1 hour x</td>
+            <td><span class="badge-review">⚠️ Review</span></td>
+          </tr>
+          <tr class="empty"><td>7.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 8. Complaint -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">😤</span>
+        <h2>8. Complaint / Refund</h2>
+        <span class="desc">Client is unhappy about something</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>8.1</td>
+            <td>unhappy, bad, terrible, complain, refund, horrible, disappointed</td>
+            <td>Hi babe, sorry to hear this x</td>
+            <td><span class="badge-review">⚠️ Review</span></td>
+          </tr>
+          <tr class="empty"><td>8.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 9. Location -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">📍</span>
+        <h2>9. Location / Address / Postcode</h2>
+        <span class="desc">Client asking where you are</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>9.1</td>
+            <td>whereareyou, address, postcode, location, directions, howtogetthere</td>
+            <td>Hi babe, its [postcode] x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>9.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 10. Opening Hours -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🕐</span>
+        <h2>10. Opening Hours / Working Days</h2>
+        <span class="desc">Client asking when you work</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>10.1</td>
+            <td>whattimedoyouopen, openinghours, what days, whenareyouopen, hours, working hours, closed</td>
+            <td>Babe, im flexible just confirm when you want to come so we can make a booking</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>10.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 11. Payment -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">💳</span>
+        <h2>11. Payment Methods</h2>
+        <span class="desc">Client asking how to pay</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>11.1</td>
+            <td>howtopay, cash, card, payment, banktransfer, doyoutakecard</td>
+            <td>Yes babe, take cash and transfer x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>11.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 12. Parking -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🅿️</span>
+        <h2>12. Parking / Transport</h2>
+        <span class="desc">Client asking about getting there</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>12.1</td>
+            <td>parking, wheretopark, bus, train, nearest station, tube, transport</td>
+            <td>There is parking in the street and all around, check the postcode babe and let me know x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>12.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 13. Greeting -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">👋</span>
+        <h2>13. General Greeting / Hello</h2>
+        <span class="desc">Client just says hello or hi</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>13.1</td>
+            <td>hi, hello, hey, hiya, goodmorning, good afternoon, goodevening</td>
+            <td>Hiya Babe thx for the message, do you want to come and see me x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>13.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 14. Thank You -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🙏</span>
+        <h2>14. Thank You / Goodbye</h2>
+        <span class="desc">Client says thanks or bye</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>14.1</td>
+            <td>thankyou, thanks, cheers, bye, seeyoulater, seeyousoon, ta</td>
+            <td>hope to see you soon x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>14.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 15. On My Way -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">✅</span>
+        <h2>15. Confirmation / On My Way</h2>
+        <span class="desc">Client confirming they're coming</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>15.1</td>
+            <td>onmyway, comingnow, betherein, leaving now, settingoff, omw, nearlythere</td>
+            <td>Ok babe just let me know when you are in the street please, and i will give you the door number x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>15.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 16. Running Late -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🕐</span>
+        <h2>16. Running Late</h2>
+        <span class="desc">Client says they'll be late</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>16.1</td>
+            <td>runninglate, belate, stuckintraffic, delayed, gonnabelate, sorryimlate</td>
+            <td>Ok babe just let me know roughly how long and time you be here. x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>16.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 17. First-Time -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">👤</span>
+        <h2>17. First-Time Client Questions</h2>
+        <span class="desc">New client asking what to expect</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>17.1</td>
+            <td>firsttime, neverbeen, whatdoineedtobring, whattoexpect, newclient</td>
+            <td>Well you will enjoy great sexy company, get to know eachother little tease i guess and then move onto more exciting moments you will never forget x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>17.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 18. Inappropriate -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🔞</span>
+        <h2>18. Inappropriate / Off-Topic</h2>
+        <span class="desc">Client asks something you don't engage with</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>18.1</td>
+            <td>Anything hardcore</td>
+            <td>Babe those things i dont do, anything extra you have to ask in person x</td>
+            <td><span class="badge-review">⚠️ Review</span></td>
+          </tr>
+          <tr class="empty"><td>18.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 19. Photos -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">📸</span>
+        <h2>19. Photos / Portfolio Request</h2>
+        <span class="desc">Client asking for photos of the space or results</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>19.1</td>
+            <td>photos, pictures, portfolio, whatdoesitlook like, canisee</td>
+            <td>If we get on well maybe, its not something i do and obviously an extra but those things you talk when we see eachother x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>19.2</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 20. Duo / Friend Request -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">👯‍♀️</span>
+        <h2>20. Duo / Friend Request</h2>
+        <span class="desc">Client asking for duo or extra company</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>20.1</td>
+            <td>Do you do Duo or have a friend</td>
+            <td>Sometimes i have a friend, depends on time and when you come x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>20.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>20.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 21. Return Client Request -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">🔄</span>
+        <h2>21. Return Client Request</h2>
+        <span class="desc">Client wanting to return or come back</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>21.1</td>
+            <td>Can i come back, want to return, want to come again</td>
+            <td>Ok babe but when, what time x</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>21.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>21.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 22. Full Service List & Rates -->
+    <div class="category">
+      <div class="category-header">
+        <span class="emoji">✨</span>
+        <h2>22. Full Service List &amp; Rates</h2>
+        <span class="desc">Client asking for detailed service menu, prices, and location</span>
+      </div>
+      <table class="reply-table">
+        <thead><tr><th>#</th><th>Client Says (Triggers)</th><th>Your Exact Reply</th><th>Mode</th></tr></thead>
+        <tbody>
+          <tr class="prefilled">
+            <td>22.1</td>
+            <td>What are your services, prices, located, based</td>
+            <td>Babe here my services and prices,<br>15min - £50, 30min £80, 1hr £130<br><br>My services:<br>Different positions.<br>•Best BJ.<br>•Erotic tantric massage.<br>•Kissing Foreplay.<br>•Erotic show.<br>•Hand job.<br>•Striptease.<br>•Boobjob.<br><br>Let me know how long you would like and what time pls</td>
+            <td><span class="badge-auto">✅ Auto</span></td>
+          </tr>
+          <tr class="empty"><td>22.2</td><td></td><td></td><td></td></tr>
+          <tr class="empty"><td>22.3</td><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer-note">
+      <strong>📌 Once filled in:</strong> Hand this sheet back and all entries will be wired into the Claude engine fallback logic, the reply library skill, the seed database, and the system prompt for live API mode.
+    </div>
+
+  </div>
+</body>
+</html>
