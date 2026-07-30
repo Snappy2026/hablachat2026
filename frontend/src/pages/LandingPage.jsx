@@ -176,38 +176,49 @@ export default function LandingPage({ onGetStarted, weeklyCharge, onOpenAdmin = 
           <span className="font-extrabold text-sm text-depth-white tracking-tight">Specialist Escort Chat</span>
         </div>
 
-        {/* Flag Selector Dropdown */}
-        <div className="relative">
+        {/* Top Bar Actions: Manager Login & Flag Selector */}
+        <div className="flex items-center gap-2">
           <button
-            onClick={() => setIsLangOpen(!isLangOpen)}
-            className="bg-slate-900/70 hover:bg-slate-800/90 border border-slate-700/60 px-3.5 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold shadow-xl backdrop-blur-md transition active:scale-95"
+            onClick={onOpenAdmin}
+            className="bg-red-950/40 hover:bg-red-900/60 border border-red-800/60 text-red-300 hover:text-white px-3 py-1.5 rounded-full text-xs font-bold transition active:scale-95 flex items-center gap-1.5"
           >
-            <span className="text-base leading-none">{activeLang.flag}</span>
-            <span className="text-slate-200">{activeLang.label}</span>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <User className="w-3.5 h-3.5" />
+            Login
           </button>
 
-          {isLangOpen && (
-            <div className="absolute right-0 mt-2 w-40 bg-slate-950/95 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1 backdrop-blur-xl animate-fade-in-up">
-              {LANGUAGES.map((l) => (
-                <button
-                  key={l.code}
-                  onClick={() => {
-                    setLang(l.code);
-                    setIsLangOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition ${
-                    lang === l.code
-                      ? 'bg-rose-950/80 text-rose-300 font-bold border border-rose-800/60'
-                      : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-                  }`}
-                >
-                  <span className="text-base leading-none">{l.flag}</span>
-                  <span>{l.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          {/* Flag Selector Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsLangOpen(!isLangOpen)}
+              className="bg-slate-900/70 hover:bg-slate-800/90 border border-slate-700/60 px-3.5 py-1.5 rounded-full flex items-center gap-2 text-xs font-semibold shadow-xl backdrop-blur-md transition active:scale-95"
+            >
+              <span className="text-base leading-none">{activeLang.flag}</span>
+              <span className="text-slate-200">{activeLang.label}</span>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            </button>
+
+            {isLangOpen && (
+              <div className="absolute right-0 mt-2 w-40 bg-slate-950/95 border border-slate-700/80 rounded-2xl shadow-2xl p-1.5 z-50 space-y-1 backdrop-blur-xl animate-fade-in-up">
+                {LANGUAGES.map((l) => (
+                  <button
+                    key={l.code}
+                    onClick={() => {
+                      setLang(l.code);
+                      setIsLangOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition ${
+                      lang === l.code
+                        ? 'bg-rose-950/80 text-rose-300 font-bold border border-rose-800/60'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    }`}
+                  >
+                    <span className="text-base leading-none">{l.flag}</span>
+                    <span>{l.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
