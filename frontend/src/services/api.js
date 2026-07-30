@@ -140,6 +140,11 @@ export const searchPhoneNumbers = async (country = 'GB', areaCode = null, contai
   return response.data;
 };
 
+export const updateWeeklyCharge = async (chargeAmount) => {
+  const response = await api.post('/onboarding/weekly-charge', { weekly_charge: chargeAmount });
+  return response.data;
+};
+
 export const purchasePhoneNumber = async (phoneNumber, countryCode = 'GB') => {
   const response = await api.post('/phone-numbers/purchase', {
     phone_number: phoneNumber,

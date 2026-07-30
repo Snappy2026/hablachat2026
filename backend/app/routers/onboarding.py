@@ -46,6 +46,20 @@ def get_weekly_charge(db: DBSession = Depends(get_db)):
     return {"weekly_charge": float(charge), "currency": "GBP", "symbol": "£"}
 
 
+@router.post("/weekly-charge")
+def update_weekly_charge(payload: dict, db: DBSession = Depends(get_db)):
+    """Master Admin: Set weekly subscription charge."""
+    new_charge = str(payload.get("weekly_charge", "0.50"))
+    setting = db.query(BotSetting).filter(BotSetting.key == "weekly_charge").first()
+    if not setting:
+        setting = BotSetting(key="weekly_charge", value=new_charge)
+        db.add(setting)
+    else:
+        setting.value = new_charge
+    db.commit()
+    return {"status": "ok", "weekly_charge": float(new_charge)}
+
+
 @router.post("/register", response_model=ClientOut)
 def register_business(payload: ClientRegister, db: DBSession = Depends(get_db)):
     """

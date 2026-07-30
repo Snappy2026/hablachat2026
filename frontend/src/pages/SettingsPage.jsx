@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone } from '../services/api';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, getWeeklyCharge, updateWeeklyCharge } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
@@ -23,11 +23,14 @@ export default function SettingsPage() {
   const [passcodeSaved, setPasscodeSaved] = useState(false);
   const [clientList, setClientList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [weeklyPriceInput, setWeeklyPriceInput] = useState('0.50');
+  const [priceSavedMsg, setPriceSavedMsg] = useState(false);
 
   useEffect(() => {
     fetchSettings();
     fetchPatterns();
     fetchClients();
+    getWeeklyCharge().then(d => setWeeklyPriceInput(String(d.weekly_charge || '0.50'))).catch(() => {});
   }, []);
 
   const fetchClients = async () => {
@@ -288,6 +291,50 @@ export default function SettingsPage() {
             {passcodeSaved && (
               <p className="text-xs text-emerald-400 font-bold animate-fade-in">
                 ✅ Master Admin Passcode updated to: <span className="font-mono text-white bg-slate-900 px-2 py-0.5 rounded">{masterPasscode}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Master Weekly Subscription Price Control */}
+          <div className="glass-card p-4 rounded-2xl border border-emerald-800/60 bg-emerald-950/20 space-y-3">
+            <h3 className="font-bold text-sm text-emerald-300 flex items-center gap-1.5">
+              <Tag className="w-4 h-4 text-emerald-400" />
+              <span>💰 Master Subscription Price Manager</span>
+            </h3>
+            <p className="text-[11px] text-slate-300">Set the weekly membership fee charged to model accounts on signup & Stripe checkout</p>
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-1">
+                <span className="absolute left-3 top-2.5 text-xs text-slate-400 font-bold">£</span>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.10"
+                  value={weeklyPriceInput}
+                  onChange={(e) => setWeeklyPriceInput(e.target.value)}
+                  placeholder="14.99"
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-white font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!weeklyPriceInput) return;
+                  try {
+                    await updateWeeklyCharge(parseFloat(weeklyPriceInput));
+                    setPriceSavedMsg(true);
+                    setTimeout(() => setPriceSavedMsg(false), 4000);
+                  } catch (err) {
+                    alert('Error updating price: ' + err.message);
+                  }
+                }}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-md active:scale-95 flex-shrink-0"
+              >
+                Save New Price
+              </button>
+            </div>
+            {priceSavedMsg && (
+              <p className="text-xs text-emerald-400 font-bold animate-fade-in">
+                ✅ Weekly Subscription price updated to: <span className="font-mono text-white bg-slate-900 px-2 py-0.5 rounded">£{weeklyPriceInput} / week</span> (Stripe checkout & onboarding updated!)
               </p>
             )}
           </div>
