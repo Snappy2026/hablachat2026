@@ -264,7 +264,7 @@ export default function App() {
 
   // ─── Main Dashboard ───
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col max-w-md mx-auto relative shadow-2xl">
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col max-w-md md:max-w-7xl mx-auto relative shadow-2xl transition-all duration-300">
       {/* Top Navbar */}
       <Navbar
         isConnected={isConnected}
