@@ -42,12 +42,12 @@ class TwilioService:
             ).order_by(Client.id.desc()).first()
             db.close()
 
-            if client and client.phone_number:
+            if client and client.phone_number and client.phone_number.startswith("+") and not client.phone_number.startswith("+441514"):
                 return client.phone_number
         except Exception as e:
-            logger.warning(f"Could not check client phone number: {e}")
+            logger.warning(f"Error querying active client phone number: {e}")
 
-        return self.from_number
+        return self.from_number or "+12603660928"
 
     def send_message(self, to_number: str, body: str, channel: str = "sms") -> str:
         """
