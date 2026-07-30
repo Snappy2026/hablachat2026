@@ -61,31 +61,31 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   };
 
   // ─── Step 1 Handler ───
-  const handleStep1Submit = async (e) => {
+  const handleStep1Submit = (e) => {
     e.preventDefault();
-    if (!modelName || !email || !address || !postcode) {
-      setError('Please fill in all details.');
+    if (!modelName || !email) {
+      setError('Please enter your Stage Name and Email.');
       return;
     }
-    setLoading(true);
     setError(null);
-    try {
-      const client = await registerBusiness({
-        model_name: modelName,
-        email: email,
-        address: address,
-        postcode: postcode,
-      });
-      if (client && client.id) {
-        setClientId(client.id);
-      }
-      setCurrentStep(2);
-    } catch (err) {
-      console.warn('Backend register call warning (proceeding to Step 2):', err);
-      setCurrentStep(2);
-    } finally {
-      setLoading(false);
-    }
+    localStorage.setItem('onboarding_model_name', modelName);
+    localStorage.setItem('onboarding_email', email);
+    localStorage.setItem('onboarding_address', address || 'Madrid');
+    localStorage.setItem('onboarding_postcode', postcode || '28029');
+
+    // Asynchronous background registration so UI never blocks
+    registerBusiness({
+      model_name: modelName,
+      email: email,
+      address: address || 'Madrid',
+      postcode: postcode || '28029',
+    }).then(client => {
+      if (client && client.id) setClientId(client.id);
+    }).catch(err => {
+      console.warn('Async background registration saved locally:', err);
+    });
+
+    setCurrentStep(2);
   };
 
   // ─── Step 2 Handlers ───
