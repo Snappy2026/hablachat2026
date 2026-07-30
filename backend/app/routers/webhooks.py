@@ -196,6 +196,7 @@ async def process_inbound_message(
         }
 
 @router.post("/twilio")
+@router.post("/sms")
 async def twilio_webhook(
     request: Request,
     From: str = Form(...),
