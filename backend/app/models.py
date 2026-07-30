@@ -94,13 +94,15 @@ class Client(Base):
     id = Column(Integer, primary_key=True, index=True)
     model_name = Column(String(100), nullable=False)
     email = Column(String(200), unique=True, index=True, nullable=False)
+    password_hash = Column(String(255), nullable=True)
+    passcode = Column(String(50), default="8888")
     address = Column(Text, nullable=False)
     postcode = Column(String(20), nullable=False)
     entrance_video_url = Column(Text, nullable=True)
     phone_number = Column(String(50), nullable=True)  # Purchased Twilio number (E.164)
     twilio_number_sid = Column(String(100), nullable=True)  # Twilio PN SID
-    country_code = Column(String(5), default="GB")
-    weekly_charge = Column(Float, default=0.0)
-    status = Column(String(20), default="active")  # "active", "suspended", "cancelled"
-    onboarded_at = Column(DateTime, nullable=True)
+    country_code = Column(String(10), default="GB")
+    weekly_charge = Column(Float, default=0.50)
+    status = Column(String(20), default="active")  # "pending", "active", "cancelled", "suspended"
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    onboarded_at = Column(DateTime, nullable=True)

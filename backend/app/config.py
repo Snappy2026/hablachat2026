@@ -18,8 +18,8 @@ class Settings(BaseSettings):
     TWILIO_PHONE_NUMBER: str = "+18005550199"
 
     # Stripe Payment Gateway Settings (Loaded from environment)
-    STRIPE_PUBLISHABLE_KEY: str = ""
-    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "pk_live_51SzkD5FBujpvbBXm92Ip2lz7GSeYnQmE62kgp4VFICpKqGBYbHCNEqaBuymgUU1BJtzrfLNXxuom6e9ay2hj6upy00YHFvCIQi")
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
 
     # Database and Application Settings
     DATABASE_URL: str = "sqlite:////tmp/massage_bot.db"

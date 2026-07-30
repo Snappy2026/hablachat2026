@@ -32,6 +32,11 @@ export const updateClientPhone = async (clientId, phoneNumber) => {
   return response.data;
 };
 
+export const updateClientPasscode = async (clientId, passcode) => {
+  const response = await api.post(`/onboarding/clients/${clientId}/passcode`, { passcode });
+  return response.data;
+};
+
 export const approveReview = async (reviewId, customReply = null) => {
   const response = await api.post(`/reviews/${reviewId}/approve`, { custom_reply: customReply });
   return response.data;

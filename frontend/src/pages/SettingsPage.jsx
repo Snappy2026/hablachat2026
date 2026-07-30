@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, getWeeklyCharge, updateWeeklyCharge } from '../services/api';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, updateClientPasscode, getWeeklyCharge, updateWeeklyCharge } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
@@ -63,6 +63,18 @@ export default function SettingsPage() {
       alert(`Reassigned line for account #${clientId} to: ${newPhone.trim()}`);
     } catch (err) {
       alert('Error reassigning phone: ' + err.message);
+    }
+  };
+
+  const handleUpdatePasscode = async (clientId, currentPasscode) => {
+    const newPin = prompt('Set private PIN / Password for this model account:', currentPasscode || '8888');
+    if (!newPin) return;
+    try {
+      await updateClientPasscode(clientId, newPin.trim());
+      fetchClients();
+      alert(`Updated passcode for account #${clientId} to: ${newPin.trim()}`);
+    } catch (err) {
+      alert('Error updating passcode: ' + err.message);
     }
   };
 
@@ -416,6 +428,14 @@ export default function SettingsPage() {
 
                           {/* 1-Click Action Controls */}
                           <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-900">
+                            <button
+                              type="button"
+                              onClick={() => handleUpdatePasscode(c.id, c.passcode)}
+                              className="bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-800/50 text-[10px] font-bold px-2.5 py-1 rounded-lg transition active:scale-95 flex items-center gap-1"
+                              title="Set or Update Account PIN / Password"
+                            >
+                              🔑 PIN: {c.passcode || '8888'}
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleReassignPhone(c.id, c.phone_number)}

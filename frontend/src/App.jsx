@@ -160,9 +160,13 @@ export default function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_authenticated');
-    localStorage.removeItem('app_view');
+    localStorage.clear();
+    sessionStorage.clear();
+    setPinInput('');
+    setPinError(false);
+    setIsPinModalOpen(false);
     setAppView('landing');
+    setToastMessage('🔒 Logged out cleanly. All session keys purged.');
   };
 
   const handleOnboardingComplete = () => {
