@@ -3,11 +3,15 @@ from pydantic import BaseModel
 from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
-from app.models import Client
+from app.models import Client, BotSetting
 from app.config import settings
 import uuid, datetime, requests
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
+
+def get_setting(db: Session, key: str, default: str) -> str:
+    s = db.query(BotSetting).filter(BotSetting.key == key).first()
+    return s.value if s else default
 
 class CheckoutRequest(BaseModel):
     client_id: int
@@ -35,6 +39,7 @@ def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_
         headers = {
             "Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}",
             "Content-Type": "application/x-www-form-urlencoded"
+        }
         charge_str = get_setting(db, "weekly_charge", "0.50")
         try:
             charge_pence = int(float(charge_str) * 100)
