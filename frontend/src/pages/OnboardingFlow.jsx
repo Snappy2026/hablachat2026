@@ -535,4 +535,10 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">You're All Set!</h2>
             <p className="text-sm text-slate-400 mb-2">Welcome aboard, {modelName} 🎉</p>
+            <p className="text-xs text-slate-500">Opening your Manager Dashboard...</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }
