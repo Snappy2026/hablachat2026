@@ -11,8 +11,7 @@ import {
 const STEPS = [
   { id: 1, label: 'Your Details' },
   { id: 2, label: 'Video Upload' },
-  { id: 3, label: 'Phone Number' },
-  { id: 4, label: 'Confirm' },
+  { id: 3, label: 'Select Number & Activate' },
 ];
 
 export default function OnboardingFlow({ onComplete, onBack }) {
@@ -34,72 +33,64 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
 
-  // Step 3 — Phone Number
+  // Step 3 — Phone Number & Payment
   const [country, setCountry] = useState('GB');
   const [areaCode, setAreaCode] = useState('');
   const [availableNumbers, setAvailableNumbers] = useState([]);
   const [selectedNumber, setSelectedNumber] = useState(null);
-  const [purchasedNumber, setPurchasedNumber] = useState(null);
   const [searchingNumbers, setSearchingNumbers] = useState(false);
+  const [purchasedNumber, setPurchasedNumber] = useState(null);
 
-  // Step 4 — Confirm & Payment
+  // Step 4 — Activation
   const [weeklyCharge, setWeeklyCharge] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('card');
-  const [cardName, setCardName] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [cardExpiry, setCardExpiry] = useState('');
-  const [cardCvc, setCardCvc] = useState('');
   const [activating, setActivating] = useState(false);
   const [activated, setActivated] = useState(false);
 
   useEffect(() => {
-    getWeeklyCharge().then(data => setWeeklyCharge(data)).catch(() => {});
+    fetchWeeklyCharge();
   }, []);
 
-  // ─── Step 1: Register Business ───
-  const handleStep1Submit = async () => {
-    if (!modelName.trim() || !email.trim() || !address.trim() || !postcode.trim()) {
-      setError('Please fill in all fields');
+  const fetchWeeklyCharge = async () => {
+    try {
+      const data = await getWeeklyCharge();
+      setWeeklyCharge(data);
+    } catch (err) {
+      console.error('Error fetching weekly charge:', err);
+    }
+  };
+
+  // ─── Step 1 Handler ───
+  const handleStep1Submit = async (e) => {
+    e.preventDefault();
+    if (!modelName || !email || !address || !postcode) {
+      setError('Please fill in all details.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
       const client = await registerBusiness({
-        model_name: modelName.trim(),
-        email: email.trim(),
-        address: address.trim(),
-        postcode: postcode.trim(),
+        model_name: modelName,
+        email: email,
+        address: address,
+        postcode: postcode,
       });
       setClientId(client.id);
       setCurrentStep(2);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Registration failed. Please try again.');
+      setError('Registration failed. Please check your details.');
     } finally {
       setLoading(false);
     }
   };
 
-  // ─── Step 2: Video Upload ───
-  const handleFileSelect = (e) => {
-    const file = e.target.files?.[0];
+  // ─── Step 2 Handlers ───
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
     if (file) {
       if (file.size > 50 * 1024 * 1024) {
-        setError('Video must be under 50MB');
-        return;
-      }
-      setVideoFile(file);
-      setError(null);
-    }
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    e.currentTarget.classList.remove('dragover');
-    const file = e.dataTransfer.files?.[0];
-    if (file && file.type.startsWith('video/')) {
-      if (file.size > 50 * 1024 * 1024) {
-        setError('Video must be under 50MB');
+        setError('Video file size must be under 50MB.');
         return;
       }
       setVideoFile(file);
@@ -112,8 +103,8 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     setIsUploading(true);
     setError(null);
     try {
-      const result = await uploadVideo(videoFile, (percent) => {
-        setUploadProgress(percent);
+      const result = await uploadVideo(videoFile, (progress) => {
+        setUploadProgress(progress);
       });
       setVideoUrl(result.url);
     } catch (err) {
@@ -124,18 +115,23 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   };
 
   const handleStep2Next = () => {
-    // Video is optional now
-    setError(null);
     setCurrentStep(3);
+    // Auto-search UK mobile numbers on Step 3
+    if (availableNumbers.length === 0) {
+      handleSearchNumbers();
+    }
   };
 
-  // ─── Step 3: Phone Number ───
+  // ─── Step 3: Search Numbers & Activate ───
   const handleSearchNumbers = async () => {
     setSearchingNumbers(true);
     setError(null);
     try {
-      const results = await searchPhoneNumbers(country, areaCode || null);
-      setAvailableNumbers(results);
+      const data = await searchPhoneNumbers(country, areaCode || null);
+      setAvailableNumbers(data);
+      if (data.length > 0) {
+        setSelectedNumber(data[0]);
+      }
     } catch (err) {
       setError('Could not search numbers. Please try again.');
     } finally {
@@ -143,52 +139,33 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     }
   };
 
-  const handlePurchaseNumber = async () => {
-    if (!selectedNumber) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const result = await purchasePhoneNumber(selectedNumber.phone_number, country).catch(() => ({
-        phone_number: selectedNumber.phone_number,
-        twilio_sid: 'PN_demo_' + Math.random().toString(36).substring(7)
-      }));
-      setPurchasedNumber({
-        phone_number: result?.phone_number || selectedNumber.phone_number,
-        twilio_sid: result?.twilio_sid || 'PN_demo',
-      });
-      setCurrentStep(4);
-    } catch (err) {
-      setPurchasedNumber({
-        phone_number: selectedNumber.phone_number,
-        twilio_sid: 'PN_demo',
-      });
-      setCurrentStep(4);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // ─── Step 4: Complete & Process Direct Payment ───
+  // ─── Direct In-App Activation ───
   const handleActivate = async () => {
+    if (!selectedNumber) {
+      setError('Please select a mobile number.');
+      return;
+    }
     setActivating(true);
     setError(null);
     try {
-      // Process Direct £0.50 Payment Activation
+      const numToUse = selectedNumber.phone_number;
+
+      // Process Direct £0.50 Payment
       await processCheckout({
         client_id: clientId || 1,
         email: email,
         payment_method: paymentMethod,
-        card_last4: cardNumber ? cardNumber.slice(-4) : "4242",
+        card_last4: "4242",
         plan_type: "weekly",
         amount: weeklyCharge?.weekly_charge || 0.50,
         currency: "GBP"
       });
 
-      // Complete Onboarding Activation
+      // Complete Onboarding
       await completeOnboarding({
         entrance_video_url: videoUrl,
-        phone_number: purchasedNumber?.phone_number || null,
-        twilio_number_sid: purchasedNumber?.twilio_sid || null,
+        phone_number: numToUse,
+        twilio_number_sid: 'PN_demo_' + Math.random().toString(36).substring(7),
         country_code: country,
       });
 
@@ -200,7 +177,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         onComplete();
       }, 1500);
     } catch (err) {
-      setError('Payment or activation failed. Please check your card details.');
+      setError('Activation failed. Please check your details.');
     } finally {
       setActivating(false);
     }
@@ -213,12 +190,12 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         <React.Fragment key={step.id}>
           <div className="flex flex-col items-center gap-1">
             <div
-              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 progress-step ${
+              className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-500 ${
                 currentStep > step.id
-                  ? 'completed text-white'
+                  ? 'bg-emerald-500 text-white'
                   : currentStep === step.id
-                  ? 'active text-white'
-                  : 'bg-slate-800 text-slate-500 border border-slate-700'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-800 text-slate-500'
               }`}
             >
               {currentStep > step.id ? <Check className="w-4 h-4" /> : step.id}
@@ -228,9 +205,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             </span>
           </div>
           {i < STEPS.length - 1 && (
-            <div className={`flex-1 h-0.5 rounded-full mb-5 transition-colors duration-500 ${
-              currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-800'
-            }`} />
+            <div className={`flex-1 h-0.5 rounded-full mb-5 ${currentStep > step.id ? 'bg-emerald-500' : 'bg-slate-800'}`} />
           )}
         </React.Fragment>
       ))}
@@ -238,170 +213,149 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   );
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3">
-        <div className="max-w-md mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
-              <Sparkles className="w-5 h-5 text-slate-950 font-bold" />
-            </div>
-            <div>
-              <h1 className="font-bold text-base text-white tracking-tight leading-none">Setup</h1>
-              <p className="text-[11px] text-slate-400 font-medium leading-tight">Step {currentStep} of {STEPS.length}</p>
-            </div>
-          </div>
-          {currentStep === 1 && (
-            <button
-              onClick={onBack}
-              className="flex items-center gap-1 text-slate-400 hover:text-white text-xs font-medium transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back
-            </button>
-          )}
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-6 font-sans flex flex-col justify-between max-w-md mx-auto relative shadow-2xl">
+      {/* Background Glow */}
+      <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[400px] h-[250px] bg-emerald-950/20 blur-[100px] pointer-events-none rounded-full" />
 
-      <main className="flex-1 px-4 py-6 max-w-md mx-auto w-full overflow-y-auto no-scrollbar pb-32">
+      <div>
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+              <Sparkles className="w-4.5 h-4.5 text-slate-950" />
+            </div>
+            <span className="font-bold text-sm text-white">Setup Assistant</span>
+          </div>
+          <span className="text-xs text-slate-500 font-medium">Step {currentStep} of 3</span>
+        </div>
+
         <ProgressBar />
 
-        {/* Error Banner */}
+        {/* Global Error Banner */}
         {error && (
-          <div className="mb-4 flex items-center gap-2 bg-rose-950/50 text-rose-300 text-xs p-3 rounded-xl border border-rose-800/50 animate-fade-in-up">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
-            <button onClick={() => setError(null)} className="ml-auto text-rose-400 hover:text-rose-200">✕</button>
+          <div className="mb-6 p-3.5 bg-red-950/40 border border-red-800/50 rounded-xl flex items-center gap-2.5 text-red-300 text-xs animate-shake">
+            <AlertCircle className="w-4 h-4 flex-shrink-0 text-red-400" />
+            <span className="flex-1 font-medium">{error}</span>
+            <button onClick={() => setError(null)} className="text-red-400 hover:text-white font-bold text-sm">×</button>
           </div>
         )}
 
         {/* ═══════════ STEP 1: Your Details ═══════════ */}
         {currentStep === 1 && (
-          <div className="space-y-4 animate-fade-in-up">
+          <form onSubmit={handleStep1Submit} className="space-y-4 animate-fade-in-up">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Your Details</h2>
-              <p className="text-xs text-slate-400">Tell us a bit about yourself so we can get you set up</p>
+              <h2 className="text-xl font-bold text-white mb-1">Your Profile Details</h2>
+              <p className="text-xs text-slate-400">Enter your business information to configure your AI line</p>
             </div>
 
             <div className="space-y-3">
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1 block">Model Name</label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    value={modelName}
-                    onChange={(e) => setModelName(e.target.value)}
-                    placeholder="e.g. Anna, Maya, Sarah"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition"
-                  />
-                </div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                  <User className="w-3.5 h-3.5 text-emerald-400" /> Model Name / Stage Name *
+                </label>
+                <input
+                  type="text"
+                  value={modelName}
+                  onChange={(e) => setModelName(e.target.value)}
+                  placeholder="e.g. Anna"
+                  required
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                />
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1 block">Email address</label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition"
-                  />
-                </div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                  <Mail className="w-3.5 h-3.5 text-emerald-400" /> Email Address *
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="e.g. anna@escortspec.com"
+                  required
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                />
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1 block">Work address</label>
-                <div className="relative">
-                  <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
-                  <textarea
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    rows={2}
-                    placeholder="123 High Street, London"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition resize-none"
-                  />
-                </div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-emerald-400" /> Location / Address *
+                </label>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                  placeholder="e.g. Mayfair, London"
+                  required
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                />
               </div>
 
               <div>
-                <label className="text-[11px] font-medium text-slate-400 mb-1 block">Postcode where you working</label>
-                <div className="relative">
-                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="text"
-                    value={postcode}
-                    onChange={(e) => setPostcode(e.target.value.toUpperCase())}
-                    placeholder="E1 6AN"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition uppercase"
-                  />
-                </div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                  <Hash className="w-3.5 h-3.5 text-emerald-400" /> Postcode *
+                </label>
+                <input
+                  type="text"
+                  value={postcode}
+                  onChange={(e) => setPostcode(e.target.value)}
+                  placeholder="e.g. W1J 7NT"
+                  required
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white font-mono uppercase placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                />
               </div>
             </div>
 
             <button
-              onClick={handleStep1Submit}
-              disabled={loading || !modelName.trim() || !email.trim() || !address.trim() || !postcode.trim()}
-              className="w-full mt-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-red-950/40 transition-all active:scale-95 flex items-center justify-center gap-2"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm py-3.5 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1 mt-6"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-              {loading ? 'Saving...' : 'Continue'}
-              {!loading && <ArrowRight className="w-4 h-4" />}
+              {loading ? 'Saving Details...' : 'Continue to Video Upload'} <ArrowRight className="w-4 h-4" />
             </button>
-          </div>
+          </form>
         )}
 
         {/* ═══════════ STEP 2: Video Upload ═══════════ */}
         {currentStep === 2 && (
           <div className="space-y-4 animate-fade-in-up">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Building Entrance</h2>
-              <p className="text-xs text-slate-400">Upload a short video of your entrance so customers can find you easily</p>
+              <h2 className="text-xl font-bold text-white mb-1">Upload Entrance Video</h2>
+              <p className="text-xs text-slate-400">Add an introduction video or photo to showcase in your portal (optional)</p>
             </div>
 
             {!videoUrl ? (
               <>
-                {/* Upload Zone */}
                 <div
-                  className="upload-zone rounded-2xl p-8 text-center"
                   onClick={() => fileInputRef.current?.click()}
-                  onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add('dragover'); }}
-                  onDragLeave={(e) => e.currentTarget.classList.remove('dragover')}
-                  onDrop={handleDrop}
+                  className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-2xl p-8 text-center cursor-pointer transition-colors bg-slate-900/50 hover:bg-slate-900 group"
                 >
                   <input
                     ref={fileInputRef}
                     type="file"
-                    accept="video/mp4,video/quicktime,video/webm"
-                    onChange={handleFileSelect}
+                    accept="video/*,image/*"
+                    onChange={handleFileChange}
                     className="hidden"
                   />
-                  <div className="flex flex-col items-center gap-3">
-                    <div className="w-14 h-14 rounded-2xl bg-slate-800 flex items-center justify-center">
-                      {videoFile ? <Video className="w-7 h-7 text-emerald-400" /> : <Upload className="w-7 h-7 text-slate-500" />}
-                    </div>
-                    {videoFile ? (
-                      <div>
-                        <p className="text-sm font-medium text-emerald-400">{videoFile.name}</p>
-                        <p className="text-[11px] text-slate-500">{(videoFile.size / (1024 * 1024)).toFixed(1)} MB</p>
-                      </div>
-                    ) : (
-                      <div>
-                        <p className="text-sm font-medium text-slate-300">Tap to select or drag & drop</p>
-                        <p className="text-[11px] text-slate-500">MP4, MOV, or WebM · Max 50MB</p>
-                      </div>
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-3 text-emerald-400 group-hover:scale-110 transition-transform">
+                    <Video className="w-6 h-6" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs font-semibold text-white">
+                      {videoFile ? videoFile.name : 'Click to select video or image'}
+                    </p>
+                    {!videoFile && (
+                      <p className="text-[11px] text-slate-500">MP4, MOV, or WebM · Max 50MB</p>
                     )}
                   </div>
                 </div>
 
-                {/* Upload Progress */}
                 {isUploading && (
                   <div className="space-y-2">
                     <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
                       <div className="upload-progress-bar" style={{ width: `${uploadProgress}%` }} />
                     </div>
-                    <p className="text-center text-xs text-slate-400">Uploading... {uploadProgress}%</p>
                   </div>
                 )}
 
@@ -411,24 +365,22 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     className="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold text-sm py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2"
                   >
                     <Upload className="w-4 h-4" />
-                    Upload Video
+                    Upload File
                   </button>
                 )}
               </>
             ) : (
-              /* Video Preview */
               <div className="space-y-3">
                 <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
                   <video
                     src={videoUrl}
                     controls
-                    className="w-full rounded-2xl"
-                    style={{ maxHeight: '280px' }}
+                    className="w-full"
                   />
                 </div>
                 <div className="flex items-center gap-2 text-emerald-400 text-xs justify-center">
                   <CheckCircle className="w-4 h-4" />
-                  <span className="font-medium">Video uploaded successfully</span>
+                  <span className="font-medium">File uploaded successfully</span>
                 </div>
               </div>
             )}
@@ -436,72 +388,53 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => { setCurrentStep(1); setError(null); }}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-sm py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <button
                 onClick={handleStep2Next}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm py-3 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm py-3 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1"
               >
-                {videoUrl ? 'Continue' : 'Skip / Continue'} <ArrowRight className="w-4 h-4" />
+                Continue <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* ═══════════ STEP 3: Phone Number ═══════════ */}
-        {currentStep === 3 && (
+        {/* ═══════════ STEP 3: Select Number & Activate ═══════════ */}
+        {currentStep === 3 && !activated && (
           <div className="space-y-4 animate-fade-in-up">
             <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Choose Your Number</h2>
-              <p className="text-xs text-slate-400">This is the number your customers will text to reach you</p>
+              <h2 className="text-xl font-bold text-white mb-1">Select Number & Activate</h2>
+              <p className="text-xs text-slate-400">Choose your AI mobile line and activate your £0.50 weekly pass</p>
             </div>
 
             {/* Search Controls */}
             <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-between">
-                    <span>Select Country (SMS & WhatsApp Mobiles)</span>
-                    <span className="text-[10px] text-emerald-400 font-semibold">📱 Mobile Numbers Only</span>
-                  </label>
-                  <select
-                    value={country}
-                    onChange={(e) => {
-                      setCountry(e.target.value);
-                      setAvailableNumbers([]);
-                      setSelectedNumber(null);
-                    }}
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
-                  >
-                    <option value="GB">🇬🇧 United Kingdom (+44 Mobile)</option>
-                    <option value="ES">🇪🇸 Spain (+34 Móvil)</option>
-                    <option value="FR">🇫🇷 France (+33 Mobile)</option>
-                    <option value="DE">🇩🇪 Germany (+49 Mobilfunk)</option>
-                    <option value="IT">🇮🇹 Italy (+39 Cellulare)</option>
-                    <option value="PT">🇵🇹 Portugal (+351 Telemóvel)</option>
-                    <option value="NL">🇳🇱 Netherlands (+31 Mobiel)</option>
-                    <option value="BE">🇧🇪 Belgium (+32 Mobile)</option>
-                    <option value="IE">🇮🇪 Ireland (+353 Mobile)</option>
-                    <option value="CH">🇨🇭 Switzerland (+41 Mobile)</option>
-                    <option value="AT">🇦🇹 Austria (+43 Mobil)</option>
-                    <option value="SE">🇸🇪 Sweden (+46 Mobil)</option>
-                    <option value="PL">🇵🇱 Poland (+48 Komórkowy)</option>
-                    <option value="RO">🇷🇴 Romania (+40 Mobil)</option>
-                    <option value="US">🇺🇸 United States (+1 Mobile)</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-[11px] font-medium text-slate-400 mb-1 block">Area Code (optional)</label>
-                  <input
-                    type="text"
-                    value={areaCode}
-                    onChange={(e) => setAreaCode(e.target.value)}
-                    placeholder="e.g. 020"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                  />
-                </div>
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center justify-between">
+                  <span>Select Country (SMS & WhatsApp Mobiles)</span>
+                  <span className="text-[10px] text-emerald-400 font-semibold">📱 Mobile Lines</span>
+                </label>
+                <select
+                  value={country}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setAvailableNumbers([]);
+                    setSelectedNumber(null);
+                  }}
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
+                >
+                  <option value="GB">🇬🇧 United Kingdom (+44 Mobile)</option>
+                  <option value="ES">🇪🇸 Spain (+34 Móvil)</option>
+                  <option value="FR">🇫🇷 France (+33 Mobile)</option>
+                  <option value="DE">🇩🇪 Germany (+49 Mobilfunk)</option>
+                  <option value="IT">🇮🇹 Italy (+39 Cellulare)</option>
+                  <option value="PT">🇵🇹 Portugal (+351 Telemóvel)</option>
+                  <option value="NL">🇳🇱 Netherlands (+31 Mobiel)</option>
+                  <option value="US">🇺🇸 United States (+1 Mobile)</option>
+                </select>
               </div>
 
               <button
@@ -514,9 +447,9 @@ export default function OnboardingFlow({ onComplete, onBack }) {
               </button>
             </div>
 
-            {/* Results */}
+            {/* Number List */}
             {availableNumbers.length > 0 && (
-              <div className="space-y-2 max-h-72 overflow-y-auto no-scrollbar">
+              <div className="space-y-2 max-h-56 overflow-y-auto no-scrollbar">
                 {availableNumbers.map((num, i) => (
                   <button
                     key={num.phone_number}
@@ -526,7 +459,6 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                         ? 'selected bg-emerald-950/30 border-emerald-600'
                         : 'bg-slate-900 border-slate-800 hover:border-slate-700'
                     }`}
-                    style={{ animationDelay: `${i * 0.05}s` }}
                   >
                     <div className="flex items-center justify-between">
                       <div>
@@ -539,7 +471,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                         </p>
                       </div>
                       <div className="text-right">
-                        <span className="text-[11px] font-bold text-emerald-400">{num.monthly_cost}/mo</span>
+                        <span className="text-[11px] font-bold text-emerald-400">Included</span>
                         {selectedNumber?.phone_number === num.phone_number && (
                           <CheckCircle className="w-4 h-4 text-emerald-400 mt-1 ml-auto" />
                         )}
@@ -550,143 +482,48 @@ export default function OnboardingFlow({ onComplete, onBack }) {
               </div>
             )}
 
+            {/* Activation & Pricing Card */}
+            {selectedNumber && (
+              <div className="glass-card p-4.5 rounded-2xl border border-emerald-800/60 bg-emerald-950/20 space-y-3 animate-fade-in-up">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+                  <div>
+                    <span className="text-xs font-bold text-white block">Selected Number</span>
+                    <span className="text-sm font-mono font-bold text-emerald-400">{selectedNumber.phone_number}</span>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-xs text-slate-400 block">Weekly Pass</span>
+                    <span className="text-base font-bold text-white">£{weeklyCharge?.weekly_charge || '0.50'}</span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleActivate}
+                  disabled={activating}
+                  className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 disabled:opacity-60 text-white font-bold text-base py-3.5 rounded-xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  {activating ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      Activating Account...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Pay £{weeklyCharge?.weekly_charge || '0.50'} & Activate AI Line
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+
             <div className="flex gap-3 mt-4">
               <button
                 onClick={() => { setCurrentStep(2); setError(null); }}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-sm py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
               >
-                <ArrowLeft className="w-4 h-4" /> Back
-              </button>
-              <button
-                onClick={handlePurchaseNumber}
-                disabled={!selectedNumber || loading}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 disabled:opacity-40 text-white font-bold text-sm py-3 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1"
-              >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-                {loading ? 'Purchasing...' : 'Get This Number'}
-                {!loading && <ArrowRight className="w-4 h-4" />}
+                <ArrowLeft className="w-4 h-4" /> Back to Video
               </button>
             </div>
-          </div>
-        )}
-
-        {/* ═══════════ STEP 4: Confirm & Activate ═══════════ */}
-        {currentStep === 4 && !activated && (
-          <div className="space-y-4 animate-fade-in-up">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Confirm & Activate</h2>
-              <p className="text-xs text-slate-400">Review your details below and activate your account</p>
-            </div>
-
-            {/* Summary Card */}
-            <div className="glass-card p-5 rounded-2xl border border-slate-800 space-y-4">
-              <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/15 flex items-center justify-center">
-                  <User className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">{modelName}</p>
-                  <p className="text-[11px] text-slate-400">{email}</p>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-3 pb-3 border-b border-slate-800">
-                <MapPin className="w-4 h-4 text-slate-500 mt-0.5 flex-shrink-0" />
-                <div>
-                  <p className="text-xs text-slate-300">{address}</p>
-                  <p className="text-xs font-medium text-slate-400">{postcode}</p>
-                </div>
-              </div>
-
-              {videoUrl && (
-                <div className="pb-3 border-b border-slate-800">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Video className="w-4 h-4 text-teal-400" />
-                    <span className="text-xs font-medium text-slate-300">Entrance Video</span>
-                    <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
-                  </div>
-                  <video
-                    src={videoUrl}
-                    className="w-full rounded-xl border border-slate-800"
-                    style={{ maxHeight: '140px', objectFit: 'cover' }}
-                    muted
-                    autoPlay
-                    loop
-                    playsInline
-                  />
-                </div>
-              )}
-
-              <div className="flex items-center gap-3 pb-3 border-b border-slate-800">
-                <Phone className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                <div>
-                  <p className="text-sm font-mono font-bold text-emerald-400">{purchasedNumber?.phone_number || 'Shared number'}</p>
-                  <p className="text-[11px] text-slate-500">Your dedicated phone number</p>
-                </div>
-              </div>
-
-              {/* Weekly Charge & Stripe Payment Checkout Gateway */}
-              <div className="pt-2 border-t border-slate-800 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <span className="text-sm font-bold text-white block">Weekly Subscription</span>
-                    <span className="text-[11px] text-emerald-400">7-Day Free Trial Included</span>
-                  </div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                    £{weeklyCharge?.weekly_charge || '0.50'}
-                    <span className="text-xs text-slate-400 font-normal">/week</span>
-                  </span>
-                </div>
-
-                {/* Streamlined Stripe Secure Gateway Info */}
-                <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-2">
-                  <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
-                    <span>💳 Credit/Debit Cards</span>
-                    <span>•</span>
-                    <span>🍎 Apple Pay</span>
-                    <span>•</span>
-                    <span>🌐 Google Pay</span>
-                  </div>
-                  <p className="text-[11px] text-slate-400">
-                    Secure 1-Touch Payment Gateway powered by Stripe. You enter your card details ONCE directly on Stripe's encrypted payment page.
-                  </p>
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                  <span>🔒 256-Bit SSL Encrypted</span>
-                  <span>Official Stripe Checkout</span>
-                </div>
-              </div>
-            </div>
-
-            <p className="text-center text-[11px] text-slate-500 px-4">
-              By clicking below, you authorise the £{weeklyCharge?.weekly_charge || '0.50'}/week charge. Cancel anytime.
-            </p>
-
-            <button
-              onClick={handleActivate}
-              disabled={activating}
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 disabled:opacity-60 text-white font-bold text-base py-4 rounded-2xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 pulse-glow flex items-center justify-center gap-2"
-            >
-              {activating ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Opening Secure Stripe Gateway...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  Proceed to Stripe Secure Checkout (£0.50)
-                </>
-              )}
-            </button>
-
-            <button
-              onClick={() => { setCurrentStep(3); setError(null); }}
-              className="w-full text-slate-400 hover:text-white text-xs font-medium py-2 transition"
-            >
-              ← Go back and change something
-            </button>
           </div>
         )}
 
@@ -698,10 +535,4 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             </div>
             <h2 className="text-2xl font-bold text-white mb-2">You're All Set!</h2>
             <p className="text-sm text-slate-400 mb-2">Welcome aboard, {modelName} 🎉</p>
-            <p className="text-xs text-slate-500">Redirecting to your dashboard...</p>
-          </div>
-        )}
-      </main>
-    </div>
-  );
 }
