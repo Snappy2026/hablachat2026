@@ -17,6 +17,7 @@ export default function SettingsPage() {
   const [newReply, setNewReply] = useState('');
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(true);
 
   useEffect(() => {
     fetchSettings();
@@ -120,22 +121,37 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-4 pb-20">
-      <div className="glass-panel p-4 rounded-2xl border border-slate-800 flex items-center justify-between">
-        <div>
-          <h2 className="font-bold text-base text-white flex items-center gap-2">
-            <Settings className="w-5 h-5 text-emerald-400" />
-            <span>Bot Control & AI Setup</span>
-          </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Manage language, tone of voice, Claude master prompt & review rules</p>
+      <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-bold text-base text-white flex items-center gap-2">
+              <Settings className="w-5 h-5 text-emerald-400" />
+              <span>{isMasterAdmin ? '👑 Master Agency Admin Portal' : 'Bot Control & Setup'}</span>
+            </h2>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {isMasterAdmin ? 'Full control over client roster, system prompts, and Twilio lines' : 'Manage your active mobile line and message signature'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setIsMasterAdmin(!isMasterAdmin)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
+              isMasterAdmin 
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
+                : 'bg-slate-800 text-slate-300 border-slate-700'
+            }`}
+          >
+            <span>{isMasterAdmin ? '👑 Master Admin Mode' : '📱 Member View'}</span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => window.location.href = '/?view=landing'}
-          className="bg-slate-800 hover:bg-slate-700 text-teal-400 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-700 transition flex items-center gap-1.5 flex-shrink-0"
-        >
-          <Globe className="w-3.5 h-3.5" />
-          <span>Landing Page</span>
-        </button>
+
+        {/* Master Admin Info Banner */}
+        {isMasterAdmin && (
+          <div className="p-3 bg-amber-950/30 border border-amber-700/50 rounded-xl flex items-center justify-between text-xs text-amber-200">
+            <span className="font-semibold">🔑 Master Passcode: <span className="font-mono text-white font-extrabold tracking-wider bg-amber-900/60 px-2 py-0.5 rounded">8888</span></span>
+            <span className="text-[11px] text-amber-400 font-medium">Full Master Admin Privileges Granted</span>
+          </div>
+        )}
       </div>
 
       {/* Active AI Mobile Line Display Card */}
@@ -196,6 +212,79 @@ export default function SettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* 👑 MASTER ADMIN EXCLUSIVE CONTROLS */}
+      {isMasterAdmin && (
+        <div className="space-y-4">
+          {/* Registered Agency Members Roster */}
+          <div className="glass-card p-4 rounded-2xl border border-amber-800/60 bg-amber-950/20 space-y-3">
+            <h3 className="font-bold text-sm text-amber-300 flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-amber-400" />
+              <span>👑 Agency Member Roster & Access Keys</span>
+            </h3>
+            <div className="space-y-2">
+              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                <div>
+                  <p className="font-bold text-white">Anna (Primary Model Account)</p>
+                  <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
+                </div>
+                <div className="text-right">
+                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
+                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: 8888</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Master Claude Prompt & Engine Customization */}
+          <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
+            <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              <span>Claude Master System Prompt</span>
+            </h3>
+            <p className="text-[11px] text-slate-400">Services, pricing, cancellation policies, and studio rules</p>
+            <textarea
+              value={systemPrompt}
+              onChange={(e) => setSystemPrompt(e.target.value)}
+              rows={6}
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+            />
+          </div>
+
+          {/* Simulation Reply Library */}
+          <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
+                <MessageSquare className="w-4 h-4 text-teal-400" />
+                <span>Simulation Reply Library</span>
+              </h3>
+              <a
+                href="/thinking-sheet.html"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-teal-300 hover:text-white font-semibold bg-teal-950/80 hover:bg-teal-900 px-2.5 py-1 rounded-lg border border-teal-700/60 transition flex items-center gap-1"
+              >
+                🧠 Print Thinking Sheet
+              </a>
+            </div>
+            <p className="text-[11px] text-slate-400">Define specific client inquiry triggers and your exact preferred responses.</p>
+            <div className="space-y-2 max-h-60 overflow-y-auto no-scrollbar">
+              {replyPatterns.map((p) => (
+                <div key={p.id} className="p-3 bg-slate-950 rounded-xl border border-slate-800/90 flex items-start justify-between gap-2">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold uppercase bg-slate-800 text-teal-300 px-2 py-0.5 rounded border border-slate-700">{p.category}</span>
+                      <span className="text-[11px] font-mono text-slate-300">Triggers: {p.keywords}</span>
+                    </div>
+                    <p className="text-xs text-emerald-200 font-normal italic leading-relaxed">"{p.preferred_reply}"</p>
+                  </div>
+                  <button type="button" onClick={() => handleDeletePattern(p.id)} className="text-slate-500 hover:text-rose-400 p-1">✕</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSave} className="space-y-4">
         {/* Custom Message Signature */}
