@@ -217,6 +217,31 @@ async def twilio_webhook(
     )
     return {"status": "ok", "result": res}
 
+@router.post("/telnyx")
+async def telnyx_webhook(
+    request: Request,
+    db: DBSession = Depends(get_db)
+):
+    """
+    Telnyx Webhook Receiver for Instant SMS.
+    """
+    try:
+        data = await request.json()
+        payload = data.get("data", {}).get("payload", {})
+        from_num = payload.get("from", {}).get("phone_number", "")
+        text_body = payload.get("text", "")
+        if from_num and text_body:
+            res = await process_inbound_message(
+                db=db,
+                phone_number=from_num,
+                message_body=text_body,
+                channel="sms"
+            )
+            return {"status": "ok", "result": res}
+    except Exception as e:
+        logger.error(f"Telnyx webhook parse error: {e}")
+    return {"status": "ok"}
+
 @router.post("/simulator")
 async def simulator_webhook(
     payload: SimulatorRequest,
