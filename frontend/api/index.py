@@ -1,5 +1,6 @@
 import os
 import sys
+from mangum import Mangum
 
 # Ensure frontend directory is in sys.path
 frontend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -17,5 +18,6 @@ try:
 except Exception as e:
     print(f"[Vercel Init] DB setup note: {e}")
 
-# Export FastAPI app for Vercel
-app_handler = app
+# Export Mangum handler for Vercel Serverless
+app_handler = Mangum(app)
+handler = Mangum(app)
