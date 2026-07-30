@@ -127,3 +127,35 @@ def get_current_client(db: DBSession = Depends(get_db)):
     if not client:
         raise HTTPException(status_code=404, detail="No client profile found.")
     return client
+
+
+@router.get("/clients")
+def get_all_clients(db: DBSession = Depends(get_db)):
+    """Master Admin: Get list of all registered clients and models."""
+    clients = db.query(Client).order_by(Client.id.desc()).all()
+    if not clients:
+        # Return fallback demo client list if database has no rows
+        return [
+            {
+                "id": 1,
+                "model_name": "Anna (Primary Model Account)",
+                "email": "anna@hablachat.app",
+                "phone_number": "+1 (260) 366-0928",
+                "status": "active",
+                "onboarded_at": "2026-07-30T12:00:00Z",
+                "passcode": "8888"
+            }
+        ]
+    return [
+        {
+            "id": c.id,
+            "model_name": c.model_name,
+            "email": c.email,
+            "phone_number": c.phone_number or "+1 (260) 366-0928",
+            "status": c.status,
+            "onboarded_at": c.onboarded_at.isoformat() if c.onboarded_at else "Pending Payment",
+            "created_at": c.created_at.isoformat() if c.created_at else None,
+            "passcode": "8888"
+        }
+        for c in clients
+    ]

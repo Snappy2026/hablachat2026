@@ -12,6 +12,16 @@ export const getPendingReviews = async () => {
   return response.data;
 };
 
+export const getAllClients = async () => {
+  try {
+    const response = await api.get('/onboarding/clients');
+    return response.data;
+  } catch (err) {
+    console.error('Error fetching all clients:', err);
+    return [];
+  }
+};
+
 export const approveReview = async (reviewId, customReply = null) => {
   const response = await api.post(`/reviews/${reviewId}/approve`, { custom_reply: customReply });
   return response.data;

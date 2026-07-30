@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus } from '../services/api';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
@@ -21,11 +21,24 @@ export default function SettingsPage() {
   const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || 'Habla2026!');
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
+  const [clientList, setClientList] = useState([]);
 
   useEffect(() => {
     fetchSettings();
     fetchPatterns();
+    fetchClients();
   }, []);
+
+  const fetchClients = async () => {
+    try {
+      const data = await getAllClients();
+      if (data && data.length > 0) {
+        setClientList(data);
+      }
+    } catch (err) {
+      console.error('Error fetching clients list:', err);
+    }
+  };
 
   const fetchPatterns = async () => {
     try {
@@ -258,21 +271,44 @@ export default function SettingsPage() {
 
           {/* Registered Agency Members Roster */}
           <div className="glass-card p-4 rounded-2xl border border-amber-800/60 bg-amber-950/20 space-y-3">
-            <h3 className="font-bold text-sm text-amber-300 flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-amber-400" />
-              <span>👑 Agency Member Roster & Access Keys</span>
-            </h3>
+            <div className="flex items-center justify-between">
+              <h3 className="font-bold text-sm text-amber-300 flex items-center gap-1.5">
+                <Key className="w-4 h-4 text-amber-400" />
+                <span>👑 Agency Member Roster & Access Keys</span>
+              </h3>
+              <span className="text-[11px] font-extrabold text-amber-400 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800/60">
+                {clientList.length > 0 ? `${clientList.length} Accounts` : '1 Account'}
+              </span>
+            </div>
+
             <div className="space-y-2">
-              <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                <div>
-                  <p className="font-bold text-white">Anna (Primary Model Account)</p>
-                  <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
+              {clientList.length === 0 ? (
+                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                  <div>
+                    <p className="font-bold text-white">Anna (Primary Model Account)</p>
+                    <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: {masterPasscode}</p>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
-                  <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: 8888</p>
-                </div>
-              </div>
+              ) : (
+                clientList.map((c) => (
+                  <div key={c.id} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+                    <div>
+                      <p className="font-bold text-white">{c.model_name || 'Anna Model'}</p>
+                      <p className="text-[11px] text-slate-400 font-mono">{c.email} • {c.phone_number}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">
+                        {c.status ? c.status.toUpperCase() : 'ACTIVE'}
+                      </span>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: {c.passcode || '8888'}</p>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
