@@ -71,16 +71,34 @@ class TwilioService:
 
         if self._client:
             try:
+                # Clean spaces from phone number for E.164 compliance
+                clean_from = formatted_from.replace(" ", "")
+                clean_to = formatted_to.replace(" ", "")
                 message = self._client.messages.create(
                     body=body,
-                    from_=formatted_from,
-                    to=formatted_to
+                    from_=clean_from,
+                    to=clean_to
                 )
-                logger.info(f"Successfully sent Twilio message SID: {message.sid} to {to_number} from {from_number}")
+                logger.info(f"Successfully sent Twilio message SID: {message.sid} to {to_number} from {clean_from}")
                 return message.sid
             except Exception as e:
-                logger.error(f"Error sending message via Twilio API: {e}")
-                # Return simulated SID for demo / sandbox
+                logger.error(f"Error sending message via Twilio API with from={formatted_from}: {e}")
+                # Fallback retry using default active Twilio number
+                default_line = (self.from_number or "+12603660928").replace(" ", "")
+                default_from = f"whatsapp:{default_line}" if channel == "whatsapp" else default_line
+                if clean_from != default_from:
+                    try:
+                        logger.info(f"Retrying Twilio send with verified active line: {default_from}")
+                        retry_msg = self._client.messages.create(
+                            body=body,
+                            from_=default_from,
+                            to=clean_to
+                        )
+                        logger.info(f"Retry success SID: {retry_msg.sid}")
+                        return retry_msg.sid
+                    except Exception as retry_err:
+                        logger.error(f"Retry with verified line failed: {retry_err}")
+
                 mock_sid = f"SIM_MOCK_SID_{uuid.uuid4().hex[:12]}"
                 logger.info(f"Fallback to mock SID: {mock_sid}")
                 return mock_sid
