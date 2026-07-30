@@ -39,18 +39,20 @@ export default function App() {
     try {
       const urlParams = new URLSearchParams(window.location.search);
       const viewParam = urlParams.get('view') || urlParams.get('admin');
-      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+      const statusParam = urlParams.get('status');
+      const isAuth = localStorage.getItem('admin_authenticated') === 'true';
+      const savedView = localStorage.getItem('app_view');
 
       getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 0.50)).catch(() => {});
 
-      if (viewParam === 'dashboard' || viewParam === '1') {
-        if (isAuth) {
-          setAppView('dashboard');
-          initDashboard();
-        } else {
-          setPendingView('dashboard');
-          setIsPinModalOpen(true);
-        }
+      if (statusParam === 'success' || viewParam === 'dashboard' || viewParam === '1') {
+        localStorage.setItem('admin_authenticated', 'true');
+        localStorage.setItem('app_view', 'dashboard');
+        setAppView('dashboard');
+        initDashboard();
+      } else if (savedView === 'dashboard' && isAuth) {
+        setAppView('dashboard');
+        initDashboard();
       } else if (viewParam === 'onboarding') {
         setAppView('onboarding');
       }
@@ -123,7 +125,7 @@ export default function App() {
 
   const switchView = (view) => {
     if (view === 'dashboard') {
-      const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
+      const isAuth = localStorage.getItem('admin_authenticated') === 'true';
       if (!isAuth) {
         setPendingView('dashboard');
         setIsPinModalOpen(true);
@@ -140,7 +142,8 @@ export default function App() {
   const handlePinSubmit = (e) => {
     e.preventDefault();
     if (pinInput === '8888' || pinInput === '1234') {
-      sessionStorage.setItem('admin_authenticated', 'true');
+      localStorage.setItem('admin_authenticated', 'true');
+      localStorage.setItem('app_view', 'dashboard');
       setIsPinModalOpen(false);
       setPinInput('');
       setPinError(false);
@@ -156,7 +159,8 @@ export default function App() {
   };
 
   const handleOnboardingComplete = () => {
-    sessionStorage.setItem('admin_authenticated', 'true');
+    localStorage.setItem('admin_authenticated', 'true');
+    localStorage.setItem('app_view', 'dashboard');
     switchView('dashboard');
   };
 
