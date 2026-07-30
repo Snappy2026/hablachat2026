@@ -78,6 +78,12 @@ export default function App() {
         fetchReviews();
       }
     });
+
+    // Auto-poll review queue every 5 seconds
+    const interval = setInterval(() => {
+      fetchReviews();
+    }, 5000);
+    return () => clearInterval(interval);
   };
 
   const fetchReviews = async () => {

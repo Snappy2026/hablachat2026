@@ -22,15 +22,11 @@ export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, on
         <div className="flex items-center gap-2">
           {/* Connection Status Dot */}
           <div 
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[11px] font-medium border ${
-              isConnected 
-                ? 'bg-red-950/60 text-red-400 border-red-800/50' 
-                : 'bg-amber-950/60 text-amber-400 border-amber-800/50'
-            }`}
-            title={isConnected ? 'Live WebSockets Connected' : 'Reconnecting...'}
+            className="flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-emerald-950/60 text-emerald-400 border-emerald-800/50 shadow-inner"
+            title="Realtime Auto-Sync Active"
           >
-            {isConnected ? <Wifi className="w-3 h-3 text-red-400" /> : <WifiOff className="w-3 h-3 text-amber-400 animate-pulse" />}
-            <span className="hidden sm:inline">{isConnected ? 'Live' : 'Syncing'}</span>
+            <Wifi className="w-3 h-3 text-emerald-400 animate-pulse" />
+            <span className="hidden sm:inline">Live Sync</span>
           </div>
 
           {/* Landing Page Trigger */}
