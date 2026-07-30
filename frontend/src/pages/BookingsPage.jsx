@@ -14,9 +14,10 @@ export default function BookingsPage() {
   const fetchBookings = async () => {
     try {
       const data = await getBookings();
-      setBookings(data);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching bookings:', err);
+      setBookings([]);
     }
   };
 
@@ -29,7 +30,9 @@ export default function BookingsPage() {
     }
   };
 
-  const filteredBookings = bookings.filter((b) => {
+  const safeBookings = Array.isArray(bookings) ? bookings : [];
+
+  const filteredBookings = safeBookings.filter((b) => {
     if (filter === 'all') return true;
     return b.status === filter;
   });

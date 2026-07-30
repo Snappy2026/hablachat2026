@@ -4,9 +4,15 @@ class WebSocketClient {
     this.listeners = new Set();
     this.reconnectTimer = null;
     this.isConnected = false;
+    this.reconnectAttempts = 0;
+    this.maxReconnectAttempts = 3;
   }
 
   connect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      return;
+    }
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const host = window.location.host;
     const wsUrl = `${protocol}//${host}/ws/notifications`;
@@ -16,7 +22,8 @@ class WebSocketClient {
 
       this.ws.onopen = () => {
         this.isConnected = true;
-        console.log('[WebSocket] Connected to Claude notifications engine');
+        this.reconnectAttempts = 0;
+        console.log('[WebSocket] Connected to notifications engine');
         this.notifyListeners({ event: 'CONNECTED', data: {} });
       };
 
@@ -31,26 +38,25 @@ class WebSocketClient {
 
       this.ws.onclose = () => {
         this.isConnected = false;
-        console.log('[WebSocket] Connection closed. Retrying in 3 seconds...');
         this.notifyListeners({ event: 'DISCONNECTED', data: {} });
         this.scheduleReconnect();
       };
 
       this.ws.onerror = (err) => {
-        console.error('[WebSocket] Error:', err);
-        this.ws.close();
+        this.ws?.close();
       };
     } catch (err) {
-      console.error('[WebSocket] Exception during connect:', err);
       this.scheduleReconnect();
     }
   }
 
   scheduleReconnect() {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) return;
+    this.reconnectAttempts += 1;
     if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
     this.reconnectTimer = setTimeout(() => {
       this.connect();
-    }, 3000);
+    }, 5000);
   }
 
   subscribe(callback) {

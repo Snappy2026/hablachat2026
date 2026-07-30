@@ -3,6 +3,8 @@ import { ShieldAlert, CheckCircle2, Sparkles, Inbox } from 'lucide-react';
 import ReviewCard from '../components/ReviewCard';
 
 export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulator }) {
+  const safeReviews = Array.isArray(reviews) ? reviews : [];
+
   return (
     <div className="space-y-4 pb-20">
       {/* Page Header Banner */}
@@ -19,13 +21,13 @@ export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulato
           </div>
 
           <div className="bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold px-3 py-1.5 rounded-xl">
-            {reviews.length} Pending
+            {safeReviews.length} Pending
           </div>
         </div>
       </div>
 
       {/* Review Queue List */}
-      {reviews.length === 0 ? (
+      {safeReviews.length === 0 ? (
         <div className="glass-card rounded-2xl p-8 text-center border border-slate-800 my-6">
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3 border border-emerald-500/20">
             <CheckCircle2 className="w-6 h-6" />
@@ -36,7 +38,7 @@ export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulato
           </p>
           <button
             onClick={onOpenSimulator}
-            className="mt-4 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition inline-flex items-center gap-1.5"
+            className="mt-4 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition inline-flex items-center gap-1.5 shadow-lg shadow-red-950/40"
           >
             <Sparkles className="w-3.5 h-3.5" />
             <span>Test Simulator</span>
@@ -44,7 +46,7 @@ export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulato
         </div>
       ) : (
         <div className="space-y-4">
-          {reviews.map((item) => (
+          {safeReviews.map((item) => (
             <ReviewCard
               key={item.id}
               item={item}
