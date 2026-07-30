@@ -315,7 +315,10 @@ export default function LandingPage({ onGetStarted, weeklyCharge }) {
 
       {/* Footer */}
       <footer className="text-center pb-8 px-6">
-        <p className="text-slate-500 text-xs font-medium tracking-wide">
+        <p
+          onClick={onOpenAdmin}
+          className="text-slate-500 hover:text-slate-400 text-xs font-medium tracking-wide cursor-pointer transition select-none"
+        >
           Powered by Specialist Escort Chat
         </p>
       </footer>
