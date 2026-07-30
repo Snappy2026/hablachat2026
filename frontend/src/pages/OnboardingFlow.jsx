@@ -638,13 +638,12 @@ export default function OnboardingFlow({ onComplete, onBack }) {
               {/* Weekly Charge & Stripe Payment Checkout Gateway */}
               <div className="pt-2 border-t border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
-            <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-bold text-white block">Weekly Subscription</span>
                     <span className="text-[11px] text-emerald-400">7-Day Free Trial Included</span>
                   </div>
                   <span className="text-xl font-bold bg-gradient-to-r from-emerald-400 to-teal-300 bg-clip-text text-transparent">
-                    £{weeklyCharge?.weekly_charge || '75.00'}
+                    £{weeklyCharge?.weekly_charge || '0.50'}
                     <span className="text-xs text-slate-400 font-normal">/week</span>
                   </span>
                 </div>
@@ -659,7 +658,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     <span>🌐 Google Pay</span>
                   </div>
                   <p className="text-[11px] text-slate-400">
-                    Secure 1-Touch Payment Gateway powered by Stripe. You will only enter your card details once directly on Stripe's encrypted checkout page.
+                    Secure 1-Touch Payment Gateway powered by Stripe. You enter your card details ONCE directly on Stripe's encrypted payment page.
                   </p>
                 </div>
 
@@ -671,7 +670,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             </div>
 
             <p className="text-center text-[11px] text-slate-500 px-4">
-              By clicking below, you authorise the £{weeklyCharge?.weekly_charge || '14.99'}/week charge. Cancel anytime.
+              By clicking below, you authorise the £{weeklyCharge?.weekly_charge || '0.50'}/week charge. Cancel anytime.
             </p>
 
             <button
@@ -682,12 +681,12 @@ export default function OnboardingFlow({ onComplete, onBack }) {
               {activating ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Processing Payment & Activating...
+                  Opening Secure Stripe Gateway...
                 </>
               ) : (
                 <>
                   <Sparkles className="w-5 h-5" />
-                  Pay £{weeklyCharge?.weekly_charge || '14.99'} & Activate AI Bot
+                  Proceed to Stripe Secure Checkout (£0.50)
                 </>
               )}
             </button>
