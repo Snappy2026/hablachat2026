@@ -630,6 +630,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
               {/* Weekly Charge & Stripe Payment Checkout Gateway */}
               <div className="pt-2 border-t border-slate-800 space-y-3">
                 <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
                   <div>
                     <span className="text-sm font-bold text-white block">Weekly Subscription</span>
                     <span className="text-[11px] text-emerald-400">7-Day Free Trial Included</span>
@@ -640,91 +641,23 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                   </span>
                 </div>
 
-                {/* Payment Methods */}
-                <div className="space-y-2 pt-2">
-                  <p className="text-[11px] font-medium text-slate-400">Select Payment Method</p>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('card')}
-                      className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold transition ${
-                        paymentMethod === 'card'
-                          ? 'bg-emerald-950/40 border-emerald-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      💳 Credit/Debit Card
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod('apple_pay')}
-                      className={`p-3 rounded-xl border flex items-center justify-center gap-2 text-xs font-semibold transition ${
-                        paymentMethod === 'apple_pay'
-                          ? 'bg-emerald-950/40 border-emerald-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-white'
-                      }`}
-                    >
-                      🍎 Apple Pay
-                    </button>
+                {/* Streamlined Stripe Secure Gateway Info */}
+                <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-2">
+                  <div className="flex items-center justify-center gap-2 text-xs font-semibold text-emerald-400">
+                    <span>💳 Credit/Debit Cards</span>
+                    <span>•</span>
+                    <span>🍎 Apple Pay</span>
+                    <span>•</span>
+                    <span>🌐 Google Pay</span>
                   </div>
+                  <p className="text-[11px] text-slate-400">
+                    Secure 1-Touch Payment Gateway powered by Stripe. You will only enter your card details once directly on Stripe's encrypted checkout page.
+                  </p>
                 </div>
-
-                {/* Card Inputs */}
-                {paymentMethod === 'card' ? (
-                  <div className="space-y-2.5 pt-2">
-                    <div>
-                      <label className="text-[11px] text-slate-400 block mb-1">Cardholder Name</label>
-                      <input
-                        type="text"
-                        value={cardName}
-                        onChange={(e) => setCardName(e.target.value)}
-                        placeholder="Name on card"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-[11px] text-slate-400 block mb-1">Card Number</label>
-                      <input
-                        type="text"
-                        value={cardNumber}
-                        onChange={(e) => setCardNumber(e.target.value)}
-                        placeholder="4242 •••• •••• 4242"
-                        className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[11px] text-slate-400 block mb-1">Expiry</label>
-                        <input
-                          type="text"
-                          value={cardExpiry}
-                          onChange={(e) => setCardExpiry(e.target.value)}
-                          placeholder="MM / YY"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] text-slate-400 block mb-1">CVC</label>
-                        <input
-                          type="text"
-                          value={cardCvc}
-                          onChange={(e) => setCardCvc(e.target.value)}
-                          placeholder="123"
-                          className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-center space-y-2">
-                    <p className="text-xs text-slate-300 font-medium">Apple Pay Ready</p>
-                    <p className="text-[11px] text-slate-400">1-Touch Express Checkout powered by Stripe</p>
-                  </div>
-                )}
 
                 <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
                   <span>🔒 256-Bit SSL Encrypted</span>
-                  <span>Powered by Stripe</span>
+                  <span>Official Stripe Checkout</span>
                 </div>
               </div>
             </div>
