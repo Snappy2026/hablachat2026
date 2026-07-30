@@ -4,7 +4,7 @@ import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, dele
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
-  const [assignedPhone, setAssignedPhone] = useState('+44 7791 126970');
+  const [assignedPhone, setAssignedPhone] = useState('+1 (260) 366-0928');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -150,14 +150,14 @@ export default function SettingsPage() {
               <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
             </div>
             <p className="text-base font-mono font-bold text-white tracking-wide">
-              {assignedPhone || '+44 7791 126970'}
+              {assignedPhone || '+1 (260) 366-0928'}
             </p>
           </div>
         </div>
         <button
           type="button"
           onClick={() => {
-            const num = assignedPhone || '+44 7791 126970';
+            const num = assignedPhone || '+1 (260) 366-0928';
             navigator.clipboard.writeText(num);
             alert(`Copied AI Mobile Line: ${num}`);
           }}
