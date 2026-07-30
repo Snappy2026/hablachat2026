@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients } from '../services/api';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
   const [clientList, setClientList] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     fetchSettings();
@@ -37,6 +38,28 @@ export default function SettingsPage() {
       }
     } catch (err) {
       console.error('Error fetching clients list:', err);
+    }
+  };
+
+  const handleToggleStatus = async (clientId, currentStatus) => {
+    const nextStatus = currentStatus === 'suspended' ? 'active' : 'suspended';
+    try {
+      await updateClientStatus(clientId, nextStatus);
+      fetchClients();
+    } catch (err) {
+      alert('Error updating status: ' + err.message);
+    }
+  };
+
+  const handleReassignPhone = async (clientId, currentPhone) => {
+    const newPhone = prompt('Enter new assigned Twilio Mobile Line for this model:', currentPhone || '+44 7791 126970');
+    if (!newPhone) return;
+    try {
+      await updateClientPhone(clientId, newPhone.trim());
+      fetchClients();
+      alert(`Reassigned line for account #${clientId} to: ${newPhone.trim()}`);
+    } catch (err) {
+      alert('Error reassigning phone: ' + err.message);
     }
   };
 
@@ -274,41 +297,106 @@ export default function SettingsPage() {
             <div className="flex items-center justify-between">
               <h3 className="font-bold text-sm text-amber-300 flex items-center gap-1.5">
                 <Key className="w-4 h-4 text-amber-400" />
-                <span>👑 Agency Member Roster & Access Keys</span>
+                <span>👑 Enterprise Agency Roster & Action Controls</span>
               </h3>
-              <span className="text-[11px] font-extrabold text-amber-400 bg-amber-950 px-2 py-0.5 rounded-md border border-amber-800/60">
-                {clientList.length > 0 ? `${clientList.length} Accounts` : '1 Account'}
-              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  const items = clientList.length > 0 ? clientList : [{ id: 1, model_name: 'Anna', email: 'anna@hablachat.app', phone_number: '+12603660928', status: 'active' }];
+                  const csvHeader = 'ID,Model Name,Email,Assigned Phone,Status\n';
+                  const csvRows = items.map(c => `${c.id},"${c.model_name || ''}","${c.email || ''}","${c.phone_number || ''}",${c.status || 'active'}`).join('\n');
+                  const blob = new Blob([csvHeader + csvRows], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `HablaChat_Agency_Roster_${new Date().toISOString().slice(0,10)}.csv`;
+                  a.click();
+                }}
+                className="bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 text-[11px] font-extrabold px-2.5 py-1 rounded-lg transition active:scale-95 flex items-center gap-1"
+              >
+                📥 Export CSV
+              </button>
             </div>
 
-            <div className="space-y-2">
-              {clientList.length === 0 ? (
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
-                  <div>
-                    <p className="font-bold text-white">Anna (Primary Model Account)</p>
-                    <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
-                  </div>
-                  <div className="text-right">
-                    <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
-                    <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: {masterPasscode}</p>
-                  </div>
-                </div>
-              ) : (
-                clientList.map((c) => (
-                  <div key={c.id} className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
+            {/* Real-time Search Bar */}
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="🔍 Search models by name, email, or mobile line..."
+              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            />
+
+            {/* Member Action Cards List */}
+            <div className="space-y-2 max-h-72 overflow-y-auto no-scrollbar">
+              {clientList
+                .filter(c => 
+                  !searchTerm || 
+                  (c.model_name && c.model_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                  (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                  (c.phone_number && c.phone_number.includes(searchTerm))
+                )
+                .length === 0 ? (
+                  <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 flex items-center justify-between text-xs">
                     <div>
-                      <p className="font-bold text-white">{c.model_name || 'Anna Model'}</p>
-                      <p className="text-[11px] text-slate-400 font-mono">{c.email} • {c.phone_number}</p>
+                      <p className="font-bold text-white">Anna (Primary Model Account)</p>
+                      <p className="text-[11px] text-slate-400 font-mono">anna@hablachat.app • +1 (260) 366-0928</p>
                     </div>
-                    <div className="text-right">
-                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">
-                        {c.status ? c.status.toUpperCase() : 'ACTIVE'}
-                      </span>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-mono">PIN: {c.passcode || '8888'}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
                     </div>
                   </div>
-                ))
-              )}
+                ) : (
+                  clientList
+                    .filter(c => 
+                      !searchTerm || 
+                      (c.model_name && c.model_name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      (c.email && c.email.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                      (c.phone_number && c.phone_number.includes(searchTerm))
+                    )
+                    .map((c) => {
+                      const isSuspended = c.status === 'suspended';
+                      return (
+                        <div key={c.id} className="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-2 text-xs">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <p className="font-bold text-white">{c.model_name || 'Anna Model'}</p>
+                              <p className="text-[11px] text-slate-400 font-mono">{c.email} • {c.phone_number}</p>
+                            </div>
+                            <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border ${
+                              isSuspended 
+                                ? 'bg-rose-500/20 text-rose-400 border-rose-500/40' 
+                                : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                            }`}>
+                              {isSuspended ? 'SUSPENDED' : 'ACTIVE'}
+                            </span>
+                          </div>
+
+                          {/* 1-Click Action Controls */}
+                          <div className="flex items-center justify-end gap-2 pt-1 border-t border-slate-900">
+                            <button
+                              type="button"
+                              onClick={() => handleReassignPhone(c.id, c.phone_number)}
+                              className="bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 text-[10px] font-bold px-2.5 py-1 rounded-lg transition active:scale-95"
+                            >
+                              📱 Reassign Line
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleToggleStatus(c.id, c.status)}
+                              className={`border text-[10px] font-extrabold px-2.5 py-1 rounded-lg transition active:scale-95 ${
+                                isSuspended
+                                  ? 'bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border-emerald-700/60'
+                                  : 'bg-rose-950 hover:bg-rose-900 text-rose-300 border-rose-800/60'
+                              }`}
+                            >
+                              {isSuspended ? '🟢 Reactivate Account' : '🔴 Suspend Account'}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
             </div>
           </div>
 

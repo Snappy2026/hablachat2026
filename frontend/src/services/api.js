@@ -22,6 +22,16 @@ export const getAllClients = async () => {
   }
 };
 
+export const updateClientStatus = async (clientId, status) => {
+  const response = await api.post(`/onboarding/clients/${clientId}/status`, { status });
+  return response.data;
+};
+
+export const updateClientPhone = async (clientId, phoneNumber) => {
+  const response = await api.post(`/onboarding/clients/${clientId}/phone`, { phone_number: phoneNumber });
+  return response.data;
+};
+
 export const approveReview = async (reviewId, customReply = null) => {
   const response = await api.post(`/reviews/${reviewId}/approve`, { custom_reply: customReply });
   return response.data;

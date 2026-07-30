@@ -159,3 +159,27 @@ def get_all_clients(db: DBSession = Depends(get_db)):
         }
         for c in clients
     ]
+
+
+@router.post("/clients/{client_id}/status")
+def update_client_status(client_id: int, payload: dict, db: DBSession = Depends(get_db)):
+    """Master Admin: Suspend or Reactivate a model account."""
+    new_status = payload.get("status", "active")
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found.")
+    client.status = new_status
+    db.commit()
+    return {"status": "ok", "client_id": client_id, "new_status": new_status}
+
+
+@router.post("/clients/{client_id}/phone")
+def update_client_phone(client_id: int, payload: dict, db: DBSession = Depends(get_db)):
+    """Master Admin: Reassign or update Twilio line for a model."""
+    new_phone = payload.get("phone_number")
+    client = db.query(Client).filter(Client.id == client_id).first()
+    if not client:
+        raise HTTPException(status_code=404, detail="Client not found.")
+    client.phone_number = new_phone
+    db.commit()
+    return {"status": "ok", "client_id": client_id, "new_phone": new_phone}
