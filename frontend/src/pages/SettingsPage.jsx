@@ -18,6 +18,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
   const [isMasterAdmin, setIsMasterAdmin] = useState(true);
+  const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || 'Habla2026!');
+  const [newMasterPasscode, setNewMasterPasscode] = useState('');
+  const [passcodeSaved, setPasscodeSaved] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -216,6 +219,43 @@ export default function SettingsPage() {
       {/* 👑 MASTER ADMIN EXCLUSIVE CONTROLS */}
       {isMasterAdmin && (
         <div className="space-y-4">
+          {/* Master Admin Passcode Security Settings */}
+          <div className="glass-card p-4 rounded-2xl border border-rose-800/60 bg-rose-950/20 space-y-3">
+            <h3 className="font-bold text-sm text-rose-300 flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-rose-400" />
+              <span>🔐 Master Admin Passcode Security</span>
+            </h3>
+            <p className="text-[11px] text-slate-300">Set your private custom passcode to log into Master Admin mode</p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newMasterPasscode}
+                onChange={(e) => setNewMasterPasscode(e.target.value)}
+                placeholder="Enter new Master Passcode (e.g. MyAgency2026!)"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white font-mono focus:outline-none focus:ring-1 focus:ring-rose-500"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (!newMasterPasscode.trim()) return;
+                  localStorage.setItem('master_admin_passcode', newMasterPasscode.trim());
+                  setMasterPasscode(newMasterPasscode.trim());
+                  setNewMasterPasscode('');
+                  setPasscodeSaved(true);
+                  setTimeout(() => setPasscodeSaved(false), 4000);
+                }}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition shadow-md active:scale-95 flex-shrink-0"
+              >
+                Save Passcode
+              </button>
+            </div>
+            {passcodeSaved && (
+              <p className="text-xs text-emerald-400 font-bold animate-fade-in">
+                ✅ Master Admin Passcode updated to: <span className="font-mono text-white bg-slate-900 px-2 py-0.5 rounded">{masterPasscode}</span>
+              </p>
+            )}
+          </div>
+
           {/* Registered Agency Members Roster */}
           <div className="glass-card p-4 rounded-2xl border border-amber-800/60 bg-amber-950/20 space-y-3">
             <h3 className="font-bold text-sm text-amber-300 flex items-center gap-1.5">

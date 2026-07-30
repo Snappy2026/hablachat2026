@@ -141,7 +141,8 @@ export default function App() {
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    if (pinInput === '8888' || pinInput === '1234') {
+    const savedMasterPasscode = localStorage.getItem('master_admin_passcode') || 'Habla2026!';
+    if (pinInput === savedMasterPasscode || pinInput === '8888' || pinInput === '1234') {
       localStorage.setItem('admin_authenticated', 'true');
       localStorage.setItem('app_view', 'dashboard');
       setIsPinModalOpen(false);
