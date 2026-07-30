@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.database import get_db
 from app.schemas import PhoneNumberSearchResult, PhoneNumberPurchaseRequest
 from app.services.twilio_numbers import twilio_numbers_service
+from app.services.telnyx_service import telnyx_service
 
 logger = logging.getLogger("phone_numbers_router")
 router = APIRouter(prefix="/api/phone-numbers", tags=["Phone Numbers"])
@@ -12,12 +13,29 @@ router = APIRouter(prefix="/api/phone-numbers", tags=["Phone Numbers"])
 
 @router.get("/search", response_model=list[PhoneNumberSearchResult])
 def search_available_numbers(
-    country: str = Query("GB", description="Country code (GB, US, etc.)"),
+    country: str = Query("GB", description="Country code (GB, ES, FR, US, etc.)"),
     area_code: str = Query(None, description="Area code to filter by"),
     contains: str = Query(None, description="Keyword or digits the number should contain"),
     db: DBSession = Depends(get_db)
 ):
-    """Search Twilio's inventory for available phone numbers with resilient fallback."""
+    """Search Telnyx & Twilio inventory for instant UK & European numbers."""
+    try:
+        if telnyx_service.is_configured():
+            telnyx_results = telnyx_service.search_numbers(country_code=country, limit=10)
+            if telnyx_results:
+                return [
+                    PhoneNumberSearchResult(
+                        phone_number=r["phone_number"],
+                        friendly_name=r["friendly_name"],
+                        locality=r["locality"],
+                        region=r["country"],
+                        country=r["country"],
+                        capabilities={"SMS": True, "Voice": True, "MMS": True}
+                    )
+                    for r in telnyx_results
+                ]
+    except Exception as err:
+        logger.warning(f"Telnyx search error: {err}")
     try:
         results = twilio_numbers_service.search_available_numbers(
             country_code=country,
