@@ -123,6 +123,31 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   };
 
   // ─── Step 3: Search Numbers & Activate ───
+  const getFallbackListForCountry = (cntry) => {
+    if (cntry === 'GB') {
+      return [
+        { phone_number: '+44 7791 126970', friendly_name: '+44 7791 126970 (UK Mobile)', locality: 'London' },
+        { phone_number: '+44 7462 147781', friendly_name: '+44 7462 147781 (UK Mobile)', locality: 'Manchester' },
+        { phone_number: '+44 7532 606026', friendly_name: '+44 7532 606026 (UK Mobile)', locality: 'Birmingham' }
+      ];
+    }
+    if (cntry === 'ES') {
+      return [
+        { phone_number: '+34 612 345 678', friendly_name: '+34 612 345 678 (Móvil España)', locality: 'Madrid' },
+        { phone_number: '+34 699 876 543', friendly_name: '+34 699 876 543 (Móvil Barcelona)', locality: 'Barcelona' }
+      ];
+    }
+    if (cntry === 'FR') {
+      return [
+        { phone_number: '+33 612 345 678', friendly_name: '+33 612 345 678 (Mobile France)', locality: 'Paris' }
+      ];
+    }
+    return [
+      { phone_number: '+1 (260) 366-0928', friendly_name: '+1 (260) 366-0928 (US Mobile)', locality: 'Huntington' },
+      { phone_number: '+1 (312) 555-0199', friendly_name: '+1 (312) 555-0199 (US Mobile)', locality: 'Chicago' }
+    ];
+  };
+
   const handleSearchNumbers = async () => {
     setSearchingNumbers(true);
     setError(null);
@@ -132,26 +157,12 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         setAvailableNumbers(data);
         setSelectedNumber(data[0]);
       } else {
-        const fallbackList = country === 'GB' ? [
-          { phone_number: '+44 7791 126970', friendly_name: '+44 7791 126970 (UK Mobile)', locality: 'London' },
-          { phone_number: '+44 7462 147781', friendly_name: '+44 7462 147781 (UK Mobile)', locality: 'Manchester' },
-          { phone_number: '+44 7532 606026', friendly_name: '+44 7532 606026 (UK Mobile)', locality: 'Birmingham' }
-        ] : [
-          { phone_number: '+1 (260) 366-0928', friendly_name: '+1 (260) 366-0928 (US Mobile)', locality: 'Huntington' },
-          { phone_number: '+1 (312) 555-0199', friendly_name: '+1 (312) 555-0199 (US Mobile)', locality: 'Chicago' }
-        ];
+        const fallbackList = getFallbackListForCountry(country);
         setAvailableNumbers(fallbackList);
         setSelectedNumber(fallbackList[0]);
       }
     } catch (err) {
-      const fallbackList = country === 'GB' ? [
-        { phone_number: '+44 7791 126970', friendly_name: '+44 7791 126970 (UK Mobile)', locality: 'London' },
-        { phone_number: '+44 7462 147781', friendly_name: '+44 7462 147781 (UK Mobile)', locality: 'Manchester' },
-        { phone_number: '+44 7532 606026', friendly_name: '+44 7532 606026 (UK Mobile)', locality: 'Birmingham' }
-      ] : [
-        { phone_number: '+1 (260) 366-0928', friendly_name: '+1 (260) 366-0928 (US Mobile)', locality: 'Huntington' },
-        { phone_number: '+1 (312) 555-0199', friendly_name: '+1 (312) 555-0199 (US Mobile)', locality: 'Chicago' }
-      ];
+      const fallbackList = getFallbackListForCountry(country);
       setAvailableNumbers(fallbackList);
       setSelectedNumber(fallbackList[0]);
     } finally {
