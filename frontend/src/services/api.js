@@ -107,6 +107,11 @@ export const processCheckout = async (paymentData) => {
   return response.data;
 };
 
+export const createStripeCheckoutSession = async (paymentData) => {
+  const response = await api.post('/payments/create-checkout-session', paymentData);
+  return response.data;
+};
+
 export const searchPhoneNumbers = async (country = 'GB', areaCode = null, contains = null) => {
   const params = new URLSearchParams({ country });
   if (areaCode) params.append('area_code', areaCode);

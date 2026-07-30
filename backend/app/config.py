@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     TWILIO_AUTH_TOKEN: str = "your_twilio_auth_token_here"
     TWILIO_PHONE_NUMBER: str = "+18005550199"
 
+    # Stripe Payment Gateway Settings (Loaded from environment)
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_SECRET_KEY: str = ""
+
     # Database and Application Settings
     DATABASE_URL: str = "sqlite:////tmp/massage_bot.db"
     AUTO_REPLY_DEFAULT: bool = True

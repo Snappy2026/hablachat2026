@@ -4,7 +4,8 @@ from typing import Optional
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import Client
-import uuid, datetime
+from app.config import settings
+import uuid, datetime, requests
 
 router = APIRouter(prefix="/api/payments", tags=["payments"])
 
@@ -25,11 +26,41 @@ class SubscriptionResponse(BaseModel):
     active: bool
     created_at: str
 
+@router.post("/create-checkout-session")
+def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_db)):
+    """Create a live Stripe Checkout Session for £0.50 weekly pass."""
+    try:
+        url = "https://api.stripe.com/v1/checkout/sessions"
+        headers = {
+            "Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}",
+            "Content-Type": "application/x-www-form-urlencoded"
+        }
+        data = {
+            "payment_method_types[]": "card",
+            "line_items[0][price_data][currency]": "gbp",
+            "line_items[0][price_data][product_data][name]": "Specialist Escort Chat - Weekly Membership",
+            "line_items[0][price_data][product_data][description]": "24/7 AI Enquiry Manager & Twilio Mobile Number",
+            "line_items[0][price_data][unit_amount]": 50,  # 50 pence = £0.50
+            "line_items[0][quantity]": 1,
+            "mode": "payment",
+            "success_url": "https://hablachat.app/?view=dashboard&status=success",
+            "cancel_url": "https://hablachat.app/?view=onboarding&status=cancel"
+        }
+        res = requests.post(url, headers=headers, data=data, timeout=10)
+        if res.status_code == 200:
+            sess = res.json()
+            return {"checkout_url": sess.get("url"), "session_id": sess.get("id")}
+        else:
+            print("Stripe API error:", res.text)
+            return {"checkout_url": None, "error": res.json()}
+    except Exception as e:
+        print("Stripe session error:", str(e))
+        return {"checkout_url": None, "error": str(e)}
+
 @router.post("/checkout", response_model=SubscriptionResponse)
 def process_checkout(payload: CheckoutRequest, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.id == payload.client_id).first()
     if not client:
-        # Create or fetch active client context
         client = db.query(Client).first()
         if client:
             client.status = "active"

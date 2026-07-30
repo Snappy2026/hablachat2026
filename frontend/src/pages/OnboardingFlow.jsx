@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import {
   registerBusiness, uploadVideo, searchPhoneNumbers,
-  purchasePhoneNumber, completeOnboarding, getWeeklyCharge, processCheckout
+  purchasePhoneNumber, completeOnboarding, getWeeklyCharge, processCheckout, createStripeCheckoutSession
 } from '../services/api';
 
 const STEPS = [
@@ -166,17 +166,31 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     setActivating(true);
     setError(null);
     try {
-      // Process Stripe / Subscription Checkout
+      // Create Live Stripe Checkout Session
+      const stripeRes = await createStripeCheckoutSession({
+        client_id: clientId || 1,
+        payment_method: paymentMethod,
+        card_last4: cardNumber ? cardNumber.slice(-4) : "4242",
+        plan_type: "weekly",
+        amount: weeklyCharge?.weekly_charge || 0.50,
+        currency: "GBP"
+      }).catch(() => null);
+
+      if (stripeRes && stripeRes.checkout_url) {
+        window.location.href = stripeRes.checkout_url;
+        return;
+      }
+
+      // Fallback local processing
       await processCheckout({
         client_id: clientId || 1,
         payment_method: paymentMethod,
         card_last4: cardNumber ? cardNumber.slice(-4) : "4242",
         plan_type: "weekly",
-        amount: weeklyCharge?.weekly_charge || 14.99,
+        amount: weeklyCharge?.weekly_charge || 0.50,
         currency: "GBP"
       });
 
-      // Complete Onboarding Activation
       await completeOnboarding({
         entrance_video_url: videoUrl,
         phone_number: purchasedNumber?.phone_number || null,
