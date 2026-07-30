@@ -13,7 +13,7 @@ class CheckoutRequest(BaseModel):
     payment_method: str = "card" # card, apple_pay, google_pay
     card_last4: Optional[str] = "4242"
     plan_type: str = "weekly"
-    amount: float = 75.00
+    amount: float = 0.50
     currency: str = "GBP"
 
 class SubscriptionResponse(BaseModel):
@@ -41,7 +41,7 @@ def process_checkout(payload: CheckoutRequest, db: Session = Depends(get_db)):
         transaction_id=tx_id,
         amount=payload.amount,
         currency=payload.currency,
-        plan="Weekly AI Messaging Pass (£75.00/wk)",
+        plan="Weekly AI Messaging Pass (£0.50/wk)",
         active=True,
         created_at=datetime.datetime.utcnow().isoformat()
     )
@@ -54,6 +54,6 @@ def get_subscription_status(client_id: int, db: Session = Depends(get_db)):
         "client_id": client_id,
         "active": is_active,
         "plan": "Weekly AI Membership",
-        "price_per_week": 75.00,
+        "price_per_week": 0.50,
         "currency": "GBP"
     }

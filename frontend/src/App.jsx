@@ -15,7 +15,7 @@ import { wsService } from './services/websocket';
 export default function App() {
   // App view: 'landing' | 'onboarding' | 'dashboard'
   const [appView, setAppView] = useState('landing');
-  const [weeklyCharge, setWeeklyCharge] = useState(75.00);
+  const [weeklyCharge, setWeeklyCharge] = useState(0.50);
 
   const [activeTab, setActiveTab] = useState('queue');
   const [reviews, setReviews] = useState([]);
@@ -41,7 +41,7 @@ export default function App() {
       const viewParam = urlParams.get('view') || urlParams.get('admin');
       const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
 
-      getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 75.00)).catch(() => {});
+      getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 0.50)).catch(() => {});
 
       if (viewParam === 'dashboard' || viewParam === '1') {
         if (isAuth) {
