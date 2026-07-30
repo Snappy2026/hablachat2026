@@ -159,6 +159,12 @@ export default function App() {
     }
   };
 
+  const handleLogout = () => {
+    localStorage.removeItem('admin_authenticated');
+    localStorage.removeItem('app_view');
+    setAppView('landing');
+  };
+
   const handleOnboardingComplete = () => {
     localStorage.setItem('admin_authenticated', 'true');
     localStorage.setItem('app_view', 'dashboard');
@@ -261,6 +267,7 @@ export default function App() {
         onViewLanding={() => switchView('landing')}
         onOpenSimulator={() => setIsSimulatorOpen(true)}
         onOpenInstallPrompt={() => setIsInstallOpen(true)}
+        onLogout={handleLogout}
       />
 
       {/* Real-time Toast Alert */}

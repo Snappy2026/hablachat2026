@@ -1,7 +1,7 @@
 import React from 'react';
-import { Sparkles, MessageSquareCode, Wifi, WifiOff, Smartphone, Globe } from 'lucide-react';
+import { Sparkles, MessageSquareCode, Wifi, WifiOff, Smartphone, Globe, LogOut } from 'lucide-react';
 
-export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, onOpenInstallPrompt }) {
+export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, onOpenInstallPrompt, onLogout }) {
   return (
     <header className="sticky top-0 z-40 glass-panel border-b border-slate-800/80 px-4 py-3">
       <div className="max-w-md mx-auto flex items-center justify-between">
@@ -46,6 +46,16 @@ export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, on
           >
             <MessageSquareCode className="w-3.5 h-3.5 text-emerald-400" />
             <span>Test Bot</span>
+          </button>
+
+          {/* Log Out Button */}
+          <button
+            onClick={onLogout}
+            className="flex items-center gap-1 bg-red-950/50 hover:bg-red-900/80 active:scale-95 text-red-300 hover:text-white text-xs font-bold px-2.5 py-1.5 rounded-lg border border-red-800/60 transition shadow-md"
+            title="Log Out"
+          >
+            <LogOut className="w-3.5 h-3.5 text-red-400" />
+            <span>Log Out</span>
           </button>
 
           {/* PWA Install Button */}
