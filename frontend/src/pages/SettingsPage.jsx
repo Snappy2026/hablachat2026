@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern } from '../services/api';
+import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
+  const [assignedPhone, setAssignedPhone] = useState('+1 (260) 366-0928');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -59,7 +60,10 @@ export default function SettingsPage() {
 
   const fetchSettings = async () => {
     try {
-      const data = await getSettings();
+      const [data, statusData] = await Promise.all([
+        getSettings(),
+        getOnboardingStatus().catch(() => null)
+      ]);
       setSettingsData(data);
       setAutoReply(data.auto_reply_enabled);
       setThreshold(data.confidence_threshold);
@@ -67,6 +71,9 @@ export default function SettingsPage() {
       if (data.language) setLanguage(data.language);
       if (data.tone) setTone(data.tone);
       if (data.custom_signature !== undefined) setSignature(data.custom_signature || '');
+      if (statusData && statusData.client && statusData.client.phone_number) {
+        setAssignedPhone(statusData.client.phone_number);
+      }
     } catch (err) {
       console.error('Error fetching settings:', err);
     }
@@ -128,6 +135,35 @@ export default function SettingsPage() {
         >
           <Globe className="w-3.5 h-3.5" />
           <span>Landing Page</span>
+        </button>
+      </div>
+
+      {/* Active AI Mobile Line Display Card */}
+      <div className="glass-card p-4 rounded-2xl border border-red-800/60 bg-red-950/30 shadow-xl flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white shadow-lg shadow-red-900/50 flex-shrink-0">
+            <Smartphone className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-0.5">
+              <span className="text-[11px] font-extrabold uppercase tracking-wider text-red-400">Assigned AI Mobile Number</span>
+              <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
+            </div>
+            <p className="text-base font-mono font-bold text-white tracking-wide">
+              {assignedPhone || '+1 (260) 366-0928'}
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            const num = assignedPhone || '+12603660928';
+            navigator.clipboard.writeText(num);
+            alert(`Copied AI Mobile Line: ${num}`);
+          }}
+          className="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-2 rounded-xl transition shadow-md active:scale-95 flex-shrink-0"
+        >
+          Copy Number
         </button>
       </div>
 
