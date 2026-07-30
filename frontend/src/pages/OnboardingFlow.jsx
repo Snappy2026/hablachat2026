@@ -280,7 +280,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     value={modelName}
                     onChange={(e) => setModelName(e.target.value)}
                     placeholder="e.g. Anna, Maya, Sarah"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition"
                   />
                 </div>
               </div>
@@ -294,7 +294,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@example.com"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition"
                   />
                 </div>
               </div>
@@ -308,7 +308,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     onChange={(e) => setAddress(e.target.value)}
                     rows={2}
                     placeholder="123 High Street, London"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition resize-none"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition resize-none"
                   />
                 </div>
               </div>
@@ -322,7 +322,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                     value={postcode}
                     onChange={(e) => setPostcode(e.target.value.toUpperCase())}
                     placeholder="E1 6AN"
-                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition uppercase"
+                    className="w-full bg-slate-900 border border-slate-800 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-rose-500/50 focus:border-rose-500/50 transition uppercase"
                   />
                 </div>
               </div>
@@ -331,7 +331,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
             <button
               onClick={handleStep1Submit}
               disabled={loading || !modelName.trim() || !email.trim() || !address.trim() || !postcode.trim()}
-              className="w-full mt-4 bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm py-3.5 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2"
+              className="w-full mt-4 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold text-sm py-3.5 rounded-xl shadow-lg shadow-red-950/40 transition-all active:scale-95 flex items-center justify-center gap-2"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
               {loading ? 'Saving...' : 'Continue'}
