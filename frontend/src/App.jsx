@@ -13,9 +13,9 @@ import { getPendingReviews, approveReview, rejectReview, getOnboardingStatus, ge
 import { wsService } from './services/websocket';
 
 export default function App() {
-  // App view: 'loading' | 'landing' | 'onboarding' | 'dashboard'
-  const [appView, setAppView] = useState('loading');
-  const [weeklyCharge, setWeeklyCharge] = useState(null);
+  // App view: 'landing' | 'onboarding' | 'dashboard'
+  const [appView, setAppView] = useState('landing');
+  const [weeklyCharge, setWeeklyCharge] = useState(75.00);
 
   const [activeTab, setActiveTab] = useState('queue');
   const [reviews, setReviews] = useState([]);
@@ -30,7 +30,7 @@ export default function App() {
   const [pinError, setPinError] = useState(false);
   const [pendingView, setPendingView] = useState(null);
 
-  // Check onboarding status on mount
+  // Check onboarding status in background on mount
   useEffect(() => {
     checkOnboarding();
   }, []);
@@ -41,11 +41,7 @@ export default function App() {
       const viewParam = urlParams.get('view') || urlParams.get('admin');
       const isAuth = sessionStorage.getItem('admin_authenticated') === 'true';
 
-      const [status, charge] = await Promise.all([
-        getOnboardingStatus(),
-        getWeeklyCharge().catch(() => ({ weekly_charge: 75.00 }))
-      ]);
-      setWeeklyCharge(charge.weekly_charge || 75.00);
+      getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 75.00)).catch(() => {});
 
       if (viewParam === 'dashboard' || viewParam === '1') {
         if (isAuth) {
@@ -54,16 +50,12 @@ export default function App() {
         } else {
           setPendingView('dashboard');
           setIsPinModalOpen(true);
-          setAppView('landing');
         }
       } else if (viewParam === 'onboarding') {
         setAppView('onboarding');
-      } else {
-        setAppView('landing');
       }
     } catch (err) {
       console.error('Error checking onboarding status:', err);
-      setAppView('landing');
     }
   };
 
