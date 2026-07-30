@@ -198,113 +198,19 @@ export default function SettingsPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-4">
-        {/* Auto-Reply Mode Toggle */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-white">Auto-Reply Mode</h3>
-              <p className="text-[11px] text-slate-400">
-                Automatically send high-confidence AI replies via Twilio
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => setAutoReply(!autoReply)}
-              className={`w-12 h-6 rounded-full transition-colors relative border ${
-                autoReply ? 'bg-emerald-600 border-emerald-500' : 'bg-slate-800 border-slate-700'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 rounded-full bg-white transition-transform ${
-                  autoReply ? 'translate-x-6' : 'translate-x-1'
-                }`}
-              />
-            </button>
-          </div>
-        </div>
-
-        {/* Response Language & Tone Controls */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-          <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-            <Globe className="w-4 h-4 text-teal-400" />
-            <span>Language & Tone Configuration</span>
-          </h3>
-
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">Target Language</label>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            >
-              {languageOptions.map((opt) => (
-                <option key={opt} value={opt}>{opt}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">Tone of Voice & Style</label>
-            <select
-              value={tone}
-              onChange={(e) => setTone(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            >
-              {toneOptions.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-[11px] font-medium text-slate-400 block mb-1">Custom Message Signature</label>
-            <input
-              type="text"
-              value={signature}
-              onChange={(e) => setSignature(e.target.value)}
-              placeholder="e.g. - Serenity Touch Spa 🌿"
-              className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
-            />
-          </div>
-        </div>
-
-        {/* Confidence Threshold Slider */}
-        <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
-                <Sliders className="w-4 h-4 text-emerald-400" />
-                <span>Confidence Threshold</span>
-              </h3>
-              <p className="text-[11px] text-slate-400">Replies below this score route to Manager Review</p>
-            </div>
-            <span className="font-bold text-emerald-400 text-sm">{Math.round(threshold * 100)}%</span>
-          </div>
-
-          <input
-            type="range"
-            min="0.50"
-            max="0.99"
-            step="0.01"
-            value={threshold}
-            onChange={(e) => setThreshold(parseFloat(e.target.value))}
-            className="w-full accent-emerald-500 bg-slate-950 h-2 rounded-lg cursor-pointer"
-          />
-        </div>
-
-        {/* System Prompt Customization */}
+        {/* Custom Message Signature */}
         <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-2">
           <h3 className="font-bold text-sm text-white flex items-center gap-1.5">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <span>Claude Master System Prompt</span>
+            <span>Custom Message Sign-off</span>
           </h3>
-          <p className="text-[11px] text-slate-400">Services, pricing, cancellation policies, and studio rules</p>
-
-          <textarea
-            value={systemPrompt}
-            onChange={(e) => setSystemPrompt(e.target.value)}
-            rows={6}
-            className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 font-mono focus:outline-none focus:ring-1 focus:ring-emerald-500"
+          <p className="text-[11px] text-slate-400">This signature is added to the end of your automated client replies</p>
+          <input
+            type="text"
+            value={signature}
+            onChange={(e) => setSignature(e.target.value)}
+            placeholder="e.g. thanks babe x"
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2.5 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
           />
         </div>
 
