@@ -11,6 +11,7 @@ router = APIRouter(prefix="/api/payments", tags=["payments"])
 
 class CheckoutRequest(BaseModel):
     client_id: int
+    email: Optional[str] = None
     payment_method: str = "card" # card, apple_pay, google_pay
     card_last4: Optional[str] = "4242"
     plan_type: str = "weekly"
@@ -46,6 +47,8 @@ def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_
             "success_url": "https://hablachat.app/?view=dashboard&status=success",
             "cancel_url": "https://hablachat.app/?view=onboarding&status=cancel"
         }
+        if payload.email and "@" in payload.email:
+            data["customer_email"] = payload.email
         res = requests.post(url, headers=headers, data=data, timeout=10)
         if res.status_code == 200:
             sess = res.json()

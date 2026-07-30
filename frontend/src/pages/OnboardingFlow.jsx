@@ -169,6 +169,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       // Create Live Stripe Checkout Session
       const stripeRes = await createStripeCheckoutSession({
         client_id: clientId || 1,
+        email: email,
         payment_method: paymentMethod,
         card_last4: cardNumber ? cardNumber.slice(-4) : "4242",
         plan_type: "weekly",
