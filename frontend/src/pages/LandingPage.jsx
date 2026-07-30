@@ -14,7 +14,7 @@ const LANGUAGES = [
 
 const TRANSLATIONS = {
   en: {
-    heroBadge: "Specialist Escort",
+    heroBadge: "Specialist Client Chat",
     heroTitle: "Customer Messaging",
     heroSub: "Automated customer enquiry management 24/7. Instant responses, booking management, and a review queue — all from your phone.",
     feature1Title: "Instant Auto-Reply",
