@@ -168,13 +168,13 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     }
   };
 
-  // ─── Step 4: Complete & Process Payment ───
+  // ─── Step 4: Complete & Process Direct Payment ───
   const handleActivate = async () => {
     setActivating(true);
     setError(null);
     try {
-      // Create Live Stripe Checkout Session
-      const stripeRes = await createStripeCheckoutSession({
+      // Process Direct £0.50 Payment Activation
+      await processCheckout({
         client_id: clientId || 1,
         email: email,
         payment_method: paymentMethod,
@@ -182,33 +182,23 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         plan_type: "weekly",
         amount: weeklyCharge?.weekly_charge || 0.50,
         currency: "GBP"
-      }).catch(() => null);
-
-      if (stripeRes && stripeRes.checkout_url) {
-        window.location.href = stripeRes.checkout_url;
-        return;
-      }
-
-      // Fallback local processing
-      await processCheckout({
-        client_id: clientId || 1,
-        payment_method: paymentMethod,
-        card_last4: cardNumber ? cardNumber.slice(-4) : "4242",
-        plan_type: "weekly",
-        amount: weeklyCharge?.weekly_charge || 0.50,
-        currency: "GBP"
       });
 
+      // Complete Onboarding Activation
       await completeOnboarding({
         entrance_video_url: videoUrl,
         phone_number: purchasedNumber?.phone_number || null,
         twilio_number_sid: purchasedNumber?.twilio_sid || null,
         country_code: country,
       });
+
+      localStorage.setItem('admin_authenticated', 'true');
+      localStorage.setItem('app_view', 'dashboard');
       setActivated(true);
+
       setTimeout(() => {
         onComplete();
-      }, 2000);
+      }, 1500);
     } catch (err) {
       setError('Payment or activation failed. Please check your card details.');
     } finally {
