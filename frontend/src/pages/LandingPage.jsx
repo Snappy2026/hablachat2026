@@ -173,7 +173,7 @@ export default function LandingPage({ onGetStarted, weeklyCharge, onOpenAdmin = 
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-500 to-red-600 flex items-center justify-center shadow-lg shadow-rose-500/50 border border-white/20">
             <Sparkles className="w-4 h-4 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)]" />
           </div>
-          <span className="font-extrabold text-sm text-depth-white tracking-tight">Specialist Escort Chat</span>
+          <span className="font-extrabold text-sm text-depth-white tracking-tight">HablaChat</span>
         </div>
 
         {/* Top Bar Actions: Manager Login & Flag Selector */}
@@ -330,7 +330,7 @@ export default function LandingPage({ onGetStarted, weeklyCharge, onOpenAdmin = 
           onClick={onOpenAdmin}
           className="text-slate-500 hover:text-slate-400 text-xs font-medium tracking-wide cursor-pointer transition select-none"
         >
-          Powered by Specialist Escort Chat
+          Powered by HablaChat
         </p>
       </footer>
     </div>

@@ -12,7 +12,7 @@ export default function Navbar({ isConnected, onViewLanding, onOpenSimulator, on
           </div>
           <div>
             <div className="flex items-center gap-1.5">
-              <h1 className="font-bold text-sm text-white tracking-tight leading-none">Specialist Escort Chat</h1>
+              <h1 className="font-bold text-sm text-white tracking-tight leading-none">HablaChat</h1>
             </div>
             <p className="text-[11px] text-slate-400 font-medium leading-tight">Automated Assistant Manager</p>
           </div>
