@@ -13,9 +13,9 @@ class Settings(BaseSettings):
     MOONSHOT_MODEL: str = ""
 
     # Twilio Messaging Settings
-    TWILIO_ACCOUNT_SID: str = "your_twilio_account_sid_here"
-    TWILIO_AUTH_TOKEN: str = "your_twilio_auth_token_here"
-    TWILIO_PHONE_NUMBER: str = "+18005550199"
+    TWILIO_ACCOUNT_SID: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    TWILIO_AUTH_TOKEN: str = os.getenv("TWILIO_AUTH_TOKEN", "")
+    TWILIO_PHONE_NUMBER: str = os.getenv("TWILIO_PHONE_NUMBER", "+18005550199")
 
     # Telnyx Messaging Settings (Instant UK & EU numbers)
     TELNYX_API_KEY: str = os.getenv("TELNYX_API_KEY", "")

@@ -4,7 +4,7 @@ import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, dele
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
-  const [assignedPhone, setAssignedPhone] = useState('+1 (260) 366-0928');
+  const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -17,7 +17,7 @@ export default function SettingsPage() {
   const [newReply, setNewReply] = useState('');
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
-  const [isMasterAdmin, setIsMasterAdmin] = useState(true);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
   const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || 'Habla2026!');
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
@@ -128,6 +128,7 @@ export default function SettingsPage() {
       if (data.custom_signature !== undefined) setSignature(data.custom_signature || '');
       if (statusData && statusData.client && statusData.client.phone_number) {
         setAssignedPhone(statusData.client.phone_number);
+        localStorage.setItem('purchased_phone_number', statusData.client.phone_number);
       }
     } catch (err) {
       console.error('Error fetching settings:', err);
@@ -221,14 +222,14 @@ export default function SettingsPage() {
                 <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2 py-0.5 rounded-full border border-emerald-500/40">ACTIVE</span>
               </div>
               <p className="text-base font-mono font-bold text-white tracking-wide">
-                {assignedPhone || '+1 (260) 366-0928'}
+                {assignedPhone || 'Line Pending Provisioning'}
               </p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => {
-              const num = assignedPhone || '+1 (260) 366-0928';
+              const num = assignedPhone || 'Line Pending Provisioning';
               navigator.clipboard.writeText(num);
               alert(`Copied AI Mobile Line: ${num}`);
             }}

@@ -179,15 +179,17 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     setActivating(true);
     setError(null);
 
-    const numToUse = selectedNumber ? selectedNumber.phone_number : '+34 612 345 678';
+    const numToUse = selectedNumber ? selectedNumber.phone_number : '+44 7791 126970';
     const emailToUse = email || localStorage.getItem('onboarding_email') || 'client@hablachat.app';
+
+    localStorage.setItem('purchased_phone_number', numToUse);
 
     // Asynchronously save onboarding details in background
     completeOnboarding({
       entrance_video_url: videoUrl || '',
       phone_number: numToUse,
       twilio_number_sid: 'PN_demo_' + Math.random().toString(36).substring(7),
-      country_code: country || 'ES',
+      country_code: country || 'GB',
     }).catch(() => null);
 
     // Try redirecting to live Stripe Checkout Session
@@ -213,6 +215,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       // Instant Dashboard transition fallback
       localStorage.setItem('admin_authenticated', 'true');
       localStorage.setItem('app_view', 'dashboard');
+      localStorage.setItem('purchased_phone_number', numToUse);
       setActivated(true);
       if (onComplete) onComplete();
     });

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session as DBSession
 
 from app.database import get_db
-from app.models import Client, BotSetting
+from app.models import Client, BotSetting, ReviewItem, Booking, Message, Session
 from app.schemas import (
     ClientRegister, ClientOut, OnboardingStatusOut, OnboardingCompleteRequest
 )
@@ -99,22 +99,8 @@ def register_business(payload: ClientRegister, db: DBSession = Depends(get_db)):
         logger.warning(f"Registration DB save warning: {err}")
         existing = db.query(Client).filter(Client.email == payload.email).first()
         if existing:
-            existing.model_name = payload.model_name
-            existing.address = payload.address
-            existing.postcode = payload.postcode
-            db.commit()
-            db.refresh(existing)
             return existing
-        return ClientOut(
-            id=1,
-            model_name=payload.model_name,
-            email=payload.email,
-            address=payload.address,
-            postcode=payload.postcode,
-            phone_number="+1 (260) 366-0928",
-            status="active",
-            weekly_charge=weekly_charge
-        )
+        raise HTTPException(status_code=500, detail=str(err))
 
 
 @router.post("/complete", response_model=ClientOut)
@@ -122,6 +108,7 @@ def complete_onboarding(payload: OnboardingCompleteRequest, db: DBSession = Depe
     """
     Final step: Mark client as fully onboarded.
     Saves video URL, phone number, and sets onboarded_at timestamp.
+    Purges any previous demo conversations / review items for a clean slate.
     """
     client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
     if not client:
@@ -136,6 +123,16 @@ def complete_onboarding(payload: OnboardingCompleteRequest, db: DBSession = Depe
         client.country_code = payload.country_code
 
     client.onboarded_at = datetime.datetime.utcnow()
+
+    # Ensure complete clean slate for the newly onboarded user
+    try:
+        db.query(ReviewItem).delete()
+        db.query(Booking).delete()
+        db.query(Message).delete()
+        db.query(Session).delete()
+    except Exception as e:
+        logger.warning(f"Clean slate purge notice: {e}")
+
     db.commit()
     db.refresh(client)
 
