@@ -174,4 +174,20 @@ export const uploadVideo = async (file, onProgress = null) => {
   return response.data;
 };
 
+export const uploadPhoto = async (file, onProgress = null) => {
+  const formData = new FormData();
+  formData.append('file', file);
+
+  const response = await axios.post('/api/uploads/photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: (progressEvent) => {
+      if (onProgress && progressEvent.total) {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        onProgress(percent);
+      }
+    },
+  });
+  return response.data;
+};
+
 export default api;

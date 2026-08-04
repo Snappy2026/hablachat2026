@@ -54,3 +54,49 @@ async def upload_video(file: UploadFile = File(...)):
         "size": len(contents),
         "content_type": file.content_type
     }
+
+
+PHOTO_UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "uploads", "photos")
+ALLOWED_PHOTO_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif", "image/jpg"}
+MAX_PHOTO_SIZE = 15 * 1024 * 1024  # 15MB
+
+@router.post("/photo")
+async def upload_photo(file: UploadFile = File(...)):
+    """
+    Upload a model photo for auto-sending to customers.
+    Accepts JPG, PNG, WebP, GIF. Max 15MB.
+    Returns the URL path to the uploaded file.
+    """
+    if file.content_type and file.content_type.lower() not in ALLOWED_PHOTO_TYPES:
+        # Fallback check extension if content type header is generic
+        ext_check = os.path.splitext(file.filename or "")[1].lower()
+        if ext_check not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid image type: {file.content_type}. Allowed: JPG, PNG, WebP, GIF"
+            )
+
+    contents = await file.read()
+    if len(contents) > MAX_PHOTO_SIZE:
+        raise HTTPException(
+            status_code=400,
+            detail="Image too large. Maximum size is 15MB."
+        )
+
+    ext = os.path.splitext(file.filename or "photo.jpg")[1] or ".jpg"
+    unique_name = f"{uuid.uuid4().hex}{ext}"
+
+    os.makedirs(PHOTO_UPLOAD_DIR, exist_ok=True)
+    file_path = os.path.join(PHOTO_UPLOAD_DIR, unique_name)
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    url = f"/uploads/photos/{unique_name}"
+    logger.info(f"Model photo uploaded: {unique_name} ({len(contents)} bytes)")
+
+    return {
+        "url": url,
+        "filename": unique_name,
+        "size": len(contents),
+        "content_type": file.content_type
+    }

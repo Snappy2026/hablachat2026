@@ -99,6 +99,7 @@ class Client(Base):
     address = Column(Text, nullable=False)
     postcode = Column(String(20), nullable=False)
     entrance_video_url = Column(Text, nullable=True)
+    photo_urls = Column(Text, nullable=True)  # JSON array string of model photo URLs
     phone_number = Column(String(50), nullable=True)  # Purchased Twilio number (E.164)
     twilio_number_sid = Column(String(100), nullable=True)  # Twilio PN SID
     country_code = Column(String(10), default="GB")

@@ -114,8 +114,12 @@ def complete_onboarding(payload: OnboardingCompleteRequest, db: DBSession = Depe
     if not client:
         raise HTTPException(status_code=404, detail="No registered client found. Please complete Step 1 first.")
 
+    import json
     if payload.entrance_video_url:
         client.entrance_video_url = payload.entrance_video_url
+
+    if payload.photo_urls is not None:
+        client.photo_urls = json.dumps(payload.photo_urls)
 
     if payload.phone_number:
         client.phone_number = payload.phone_number

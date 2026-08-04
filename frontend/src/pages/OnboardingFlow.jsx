@@ -27,9 +27,10 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   const [postcode, setPostcode] = useState('');
   const [clientId, setClientId] = useState(null);
 
-  // Step 2 — Video
+  // Step 2 — Video & Model Photos
   const [videoFile, setVideoFile] = useState(null);
   const [videoUrl, setVideoUrl] = useState(null);
+  const [photoUrls, setPhotoUrls] = useState([]);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
@@ -373,86 +374,140 @@ export default function OnboardingFlow({ onComplete, onBack }) {
           </form>
         )}
 
-        {/* ═══════════ STEP 2: Video Upload ═══════════ */}
+        {/* ═══════════ STEP 2: Entrance Video & Model Photos ═══════════ */}
         {currentStep === 2 && (
-          <div className="space-y-4 animate-fade-in-up">
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-white mb-1">Upload Entrance Video</h2>
-              <p className="text-xs text-slate-400">Add an introduction video or photo to showcase in your portal (optional)</p>
+          <div className="space-y-6 animate-fade-in-up">
+            <div className="text-center mb-4">
+              <h2 className="text-xl font-bold text-white mb-1">Entrance Video & Model Photos</h2>
+              <p className="text-xs text-slate-400">Add optional entrance video and model photos for AI auto-sending</p>
             </div>
 
-            {!videoUrl ? (
-              <>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  className="border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-2xl p-8 text-center cursor-pointer transition-colors bg-slate-900/50 hover:bg-slate-900 group"
-                >
+            {/* Section A: Building Entrance Video */}
+            <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3 bg-slate-900/40">
+              <div className="flex items-center gap-2">
+                <Video className="w-4 h-4 text-emerald-400" />
+                <h3 className="font-bold text-xs text-white">1. Building Entrance / Arrival Video</h3>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Upload a short video showing building entrance or door buzz instructions. The AI automatically sends this when customers arrive in your street.
+              </p>
+
+              {!videoUrl ? (
+                <>
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 text-center cursor-pointer transition-colors bg-slate-950/60 hover:bg-slate-950 group"
+                  >
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="video/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                    <Video className="w-5 h-5 text-slate-400 group-hover:scale-110 transition-transform mx-auto mb-1" />
+                    <p className="text-xs font-medium text-slate-300">
+                      {videoFile ? videoFile.name : 'Click to select Entrance Video (MP4, MOV)'}
+                    </p>
+                  </div>
+
+                  {videoFile && !videoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleUploadVideo}
+                      disabled={isUploading}
+                      className="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2"
+                    >
+                      {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
+                      {isUploading ? 'Uploading Video...' : 'Upload Entrance Video'}
+                    </button>
+                  )}
+                </>
+              ) : (
+                <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold bg-emerald-950/40 border border-emerald-800/50 p-2.5 rounded-xl">
+                  <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                  <span className="flex-1 truncate">Entrance Video uploaded successfully!</span>
+                </div>
+              )}
+            </div>
+
+            {/* Section B: Model Photo Gallery */}
+            <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-3 bg-slate-900/40">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <h3 className="font-bold text-xs text-white">2. Model Photo Gallery (Pictures)</h3>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-relaxed">
+                Upload photos of the model. When customers ask for pictures (<em>"can I see photos", "send pics"</em>), the AI automatically sends your gallery!
+              </p>
+
+              <div className="space-y-3">
+                <label className="border border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl p-5 text-center cursor-pointer transition-colors bg-slate-950/60 hover:bg-slate-950 flex flex-col items-center justify-center">
                   <input
-                    ref={fileInputRef}
                     type="file"
-                    accept="video/*,image/*"
-                    onChange={handleFileChange}
+                    accept="image/*"
+                    multiple
+                    onChange={async (e) => {
+                      const files = Array.from(e.target.files || []);
+                      if (files.length === 0) return;
+                      setIsUploading(true);
+                      try {
+                        const urls = [...photoUrls];
+                        for (const file of files) {
+                          const res = await uploadPhoto(file);
+                          if (res && res.url) urls.push(res.url);
+                        }
+                        setPhotoUrls(urls);
+                        localStorage.setItem('onboarding_photo_urls', JSON.stringify(urls));
+                      } catch (err) {
+                        setError('Failed to upload one or more photos.');
+                      } finally {
+                        setIsUploading(false);
+                      }
+                    }}
                     className="hidden"
                   />
-                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto mb-3 text-emerald-400 group-hover:scale-110 transition-transform">
-                    <Video className="w-6 h-6" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-xs font-semibold text-white">
-                      {videoFile ? videoFile.name : 'Click to select video or image'}
-                    </p>
-                    {!videoFile && (
-                      <p className="text-[11px] text-slate-500">MP4, MOV, or WebM · Max 50MB</p>
-                    )}
-                  </div>
-                </div>
+                  <Upload className="w-5 h-5 text-slate-400 mb-1" />
+                  <span className="text-xs font-medium text-slate-300">Click to upload Model Photos (JPG, PNG, WebP)</span>
+                </label>
 
-                {isUploading && (
-                  <div className="space-y-2">
-                    <div className="w-full bg-slate-800 rounded-full h-1.5 overflow-hidden">
-                      <div className="upload-progress-bar" style={{ width: `${uploadProgress}%` }} />
-                    </div>
+                {photoUrls.length > 0 && (
+                  <div className="grid grid-cols-4 gap-2 pt-1">
+                    {photoUrls.map((url, idx) => (
+                      <div key={idx} className="relative group rounded-xl overflow-hidden border border-slate-800 aspect-square bg-slate-950">
+                        <img src={url} alt={`Model ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = photoUrls.filter((_, i) => i !== idx);
+                            setPhotoUrls(updated);
+                            localStorage.setItem('onboarding_photo_urls', JSON.stringify(updated));
+                          }}
+                          className="absolute top-1 right-1 bg-red-600/90 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] font-bold opacity-80 hover:opacity-100"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
                   </div>
                 )}
-
-                {videoFile && !isUploading && (
-                  <button
-                    onClick={handleUploadVideo}
-                    className="w-full bg-slate-800 hover:bg-slate-700 text-emerald-400 font-semibold text-sm py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-2"
-                  >
-                    <Upload className="w-4 h-4" />
-                    Upload File
-                  </button>
-                )}
-              </>
-            ) : (
-              <div className="space-y-3">
-                <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-900">
-                  <video
-                    src={videoUrl}
-                    controls
-                    className="w-full"
-                  />
-                </div>
-                <div className="flex items-center gap-2 text-emerald-400 text-xs justify-center">
-                  <CheckCircle className="w-4 h-4" />
-                  <span className="font-medium">File uploaded successfully</span>
-                </div>
               </div>
-            )}
+            </div>
 
             <div className="flex gap-3 mt-4">
               <button
+                type="button"
                 onClick={() => { setCurrentStep(1); setError(null); }}
-                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-2.5 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
+                className="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 font-medium text-xs py-3 rounded-xl border border-slate-700 transition flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <button
+                type="button"
                 onClick={handleStep2Next}
-                className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-sm py-3 rounded-xl shadow-lg transition-all active:scale-95 flex items-center justify-center gap-1"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-bold text-xs py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-1"
               >
-                Continue <ArrowRight className="w-4 h-4" />
+                Continue to Select Line <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>

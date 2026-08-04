@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
-import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, updateClientPasscode, getWeeklyCharge, updateWeeklyCharge } from '../services/api';
+import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, updateClientPasscode, getWeeklyCharge, updateWeeklyCharge, uploadPhoto, uploadVideo } from '../services/api';
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
@@ -252,7 +252,7 @@ export default function SettingsPage() {
               const clean = (assignedPhone || '+12603660928').replace(/\D/g, '');
               const waUrl = `https://wa.me/${clean}`;
               navigator.clipboard.writeText(waUrl);
-              alert(`Copied WhatsApp Direct Link:\n${waUrl}\n\nPaste this onto your escort directory listing!`);
+              alert(`Copied WhatsApp Direct Link:\n${waUrl}\n\nPaste this onto your listing!`);
             }}
             className="bg-emerald-950/40 hover:bg-emerald-900/60 border border-emerald-800/50 text-emerald-300 text-xs font-semibold py-2 px-2.5 rounded-xl transition active:scale-95 flex items-center justify-center gap-1.5"
           >
@@ -270,6 +270,50 @@ export default function SettingsPage() {
           >
             <span>📱 Copy SMS Link</span>
           </button>
+        </div>
+      </div>
+
+      {/* Entrance Video & Model Photo Gallery Management Card */}
+      <div className="glass-card p-4 rounded-2xl border border-slate-800 space-y-4 bg-slate-900/30">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-emerald-400" />
+          <div>
+            <h3 className="font-bold text-sm text-white">Building Entrance Video & Model Photos</h3>
+            <p className="text-[11px] text-slate-400">Manage media sent automatically by your AI assistant</p>
+          </div>
+        </div>
+
+        {/* Model Photos Uploader */}
+        <div className="space-y-2 border-t border-slate-800/80 pt-3">
+          <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
+            <span>📸 Model Photos (Auto-sent when customer asks for pics)</span>
+          </label>
+          <div className="flex items-center gap-2">
+            <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer transition flex items-center gap-1.5">
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files || []);
+                  if (files.length === 0) return;
+                  try {
+                    const existing = JSON.parse(localStorage.getItem('model_photo_urls') || '[]');
+                    for (const file of files) {
+                      const res = await uploadPhoto(file);
+                      if (res && res.url) existing.push(res.url);
+                    }
+                    localStorage.setItem('model_photo_urls', JSON.stringify(existing));
+                    alert(`Uploaded ${files.length} model photo(s) successfully!`);
+                  } catch (err) {
+                    alert('Error uploading photos: ' + err.message);
+                  }
+                }}
+                className="hidden"
+              />
+              <span>+ Upload Model Photos</span>
+            </label>
+          </div>
         </div>
       </div>
 

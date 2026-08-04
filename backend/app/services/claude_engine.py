@@ -197,12 +197,52 @@ class ClaudeEngine:
             "i am outside", "here now", "im here", "i am here", "which door", "door number", "buzz", "where do i go"
         ]
         if any(w in lower for w in street_arrival_keywords):
+            video_note = ""
+            try:
+                from app.database import SessionLocal
+                from app.models import Client
+                db = SessionLocal()
+                active_client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+                if active_client and active_client.entrance_video_url:
+                    video_note = f"\n\nEntrance Video: {active_client.entrance_video_url}"
+                db.close()
+            except Exception:
+                pass
+
             return ClaudeAnalysisOutput(
-                reply_text="Hi babe, I'm door number 5! Just buzz when you get to the door",
+                reply_text=f"Hi babe, I'm door number 5! Just buzz when you get to the door{video_note}\n\nthanks babe x",
                 intent="general_faq",
                 confidence=0.98,
                 requires_human_review=False,
-                review_reason="Street arrival confirmed; door number and buzz instructions provided.",
+                review_reason="Street arrival confirmed; door number and entrance video provided.",
+                extracted_booking=None
+            )
+
+        # Model Photo Gallery Request
+        photo_keywords = ["photo", "photos", "pic", "pics", "picture", "pictures", "send photos", "send pics", "photos of you", "pics of you", "see pics", "see photos"]
+        if any(w in lower for w in photo_keywords):
+            photo_reply = "Hi babe, here are my photos! x"
+            try:
+                from app.database import SessionLocal
+                from app.models import Client
+                import json
+                db = SessionLocal()
+                active_client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+                if active_client and active_client.photo_urls:
+                    urls = json.loads(active_client.photo_urls)
+                    if urls and len(urls) > 0:
+                        formatted_links = "\n".join([f"• {u}" for u in urls])
+                        photo_reply = f"Hi babe, here are my photos:\n{formatted_links}\n\nthanks babe x"
+                db.close()
+            except Exception:
+                pass
+
+            return ClaudeAnalysisOutput(
+                reply_text=photo_reply,
+                intent="general_faq",
+                confidence=0.98,
+                requires_human_review=False,
+                review_reason="Model photo gallery request answered.",
                 extracted_booking=None
             )
 

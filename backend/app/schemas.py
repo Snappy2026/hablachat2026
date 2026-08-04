@@ -114,6 +114,8 @@ class SettingsUpdate(BaseModel):
     language: Optional[str] = None
     tone: Optional[str] = None
     custom_signature: Optional[str] = None
+    photo_urls: Optional[List[str]] = None
+    entrance_video_url: Optional[str] = None
 
 # Client Onboarding Models
 class ClientRegister(BaseModel):
@@ -129,6 +131,7 @@ class ClientOut(BaseModel):
     address: str
     postcode: str
     entrance_video_url: Optional[str] = None
+    photo_urls: Optional[str] = None
     phone_number: Optional[str] = None
     twilio_number_sid: Optional[str] = None
     country_code: str = "GB"
@@ -158,6 +161,7 @@ class PhoneNumberPurchaseRequest(BaseModel):
 
 class OnboardingCompleteRequest(BaseModel):
     entrance_video_url: Optional[str] = None
+    photo_urls: Optional[List[str]] = None
     phone_number: Optional[str] = None
     twilio_number_sid: Optional[str] = None
     country_code: str = "GB"
