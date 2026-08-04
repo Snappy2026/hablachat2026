@@ -4,13 +4,6 @@ import { ShieldAlert, MessageCircle, CalendarCheck, Settings } from 'lucide-reac
 export default function BottomNav({ activeTab, setActiveTab, pendingReviewCount }) {
   const tabs = [
     {
-      id: 'queue',
-      label: 'Review Queue',
-      icon: ShieldAlert,
-      badge: pendingReviewCount > 0 ? pendingReviewCount : null,
-      badgeColor: 'bg-rose-500 text-white',
-    },
-    {
       id: 'messages',
       label: 'Messages',
       icon: MessageCircle,
@@ -29,7 +22,7 @@ export default function BottomNav({ activeTab, setActiveTab, pendingReviewCount 
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 glass-panel border-t border-slate-800/90 px-3 py-2 pb-safe">
-      <div className="max-w-md md:max-w-7xl mx-auto grid grid-cols-4 gap-2">
+      <div className="max-w-md md:max-w-7xl mx-auto grid grid-cols-3 gap-2">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;

@@ -19,7 +19,7 @@ export default function App() {
   const [chatModelName, setChatModelName] = useState('Anna');
   const [weeklyCharge, setWeeklyCharge] = useState(0.50);
 
-  const [activeTab, setActiveTab] = useState('queue');
+  const [activeTab, setActiveTab] = useState('messages');
   const [reviews, setReviews] = useState([]);
   const [isConnected, setIsConnected] = useState(false);
   const [isSimulatorOpen, setIsSimulatorOpen] = useState(false);
