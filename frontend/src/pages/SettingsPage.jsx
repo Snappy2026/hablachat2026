@@ -5,6 +5,7 @@ import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, dele
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
   const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '+1 (509) 472-0397');
+  const [entranceVideo, setEntranceVideo] = useState(localStorage.getItem('entrance_video_url') || '');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -283,13 +284,72 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Building Entrance Video Uploader */}
+        <div className="space-y-2 border-t border-slate-800/80 pt-3">
+          <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
+            <span>🎥 Building Entrance Video (Auto-sent when customer arrives)</span>
+          </label>
+          {entranceVideo ? (
+            <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
+              <span className="text-emerald-400 font-medium truncate flex-1">✅ Active Video: {entranceVideo}</span>
+              <label className="ml-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1.5 rounded-lg cursor-pointer transition flex-shrink-0 font-bold">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    try {
+                      const res = await uploadVideo(file);
+                      if (res && res.url) {
+                        setEntranceVideo(res.url);
+                        localStorage.setItem('entrance_video_url', res.url);
+                        alert('Building Entrance Video updated successfully!');
+                      }
+                    } catch (err) {
+                      alert('Error uploading video: ' + err.message);
+                    }
+                  }}
+                  className="hidden"
+                />
+                Replace Video
+              </label>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    try {
+                      const res = await uploadVideo(file);
+                      if (res && res.url) {
+                        setEntranceVideo(res.url);
+                        localStorage.setItem('entrance_video_url', res.url);
+                        alert('Building Entrance Video uploaded successfully!');
+                      }
+                    } catch (err) {
+                      alert('Error uploading video: ' + err.message);
+                    }
+                  }}
+                  className="hidden"
+                />
+                <span>+ Upload Entrance Video (MP4, MOV)</span>
+              </label>
+            </div>
+          )}
+        </div>
+
         {/* Model Photos Uploader */}
         <div className="space-y-2 border-t border-slate-800/80 pt-3">
           <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
             <span>📸 Model Photos (Auto-sent when customer asks for pics)</span>
           </label>
           <div className="flex items-center gap-2">
-            <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3 py-2 rounded-xl cursor-pointer transition flex items-center gap-1.5">
+            <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5">
               <input
                 type="file"
                 accept="image/*"
