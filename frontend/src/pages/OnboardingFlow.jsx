@@ -80,13 +80,6 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       model_name: modelName,
       email: email,
       address: address || 'Madrid',
-    localStorage.setItem('onboarding_postcode', postcode || '28029');
-
-    // Asynchronous background registration so UI never blocks
-    registerBusiness({
-      model_name: modelName,
-      email: email,
-      address: address || 'Madrid',
       postcode: postcode || '28029',
     }).then(client => {
       if (client && client.id) setClientId(client.id);
