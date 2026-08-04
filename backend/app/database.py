@@ -16,6 +16,10 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
+    try:
+        Base.metadata.create_all(bind=engine)
+    except Exception as e:
+        print("DB table creation warning:", e)
     db = SessionLocal()
     try:
         yield db
