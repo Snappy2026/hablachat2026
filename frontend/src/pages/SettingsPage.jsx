@@ -2,7 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Settings, Sliders, Sparkles, Key, CheckCircle, AlertCircle, Save, Globe, MessageSquare, Tag, Smartphone } from 'lucide-react';
 import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, deleteReplyPattern, getOnboardingStatus, getAllClients, updateClientStatus, updateClientPhone, updateClientPasscode, getWeeklyCharge, updateWeeklyCharge, uploadPhoto, uploadVideo } from '../services/api';
 
+import { useLanguage } from '../context/LanguageContext';
+
 export default function SettingsPage() {
+  const { language: backofficeLang, setLanguage: setBackofficeLang, t, supportedLanguages } = useLanguage();
   const [settingsData, setSettingsData] = useState(null);
   const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '+1 (509) 472-0397');
   const [entranceVideo, setEntranceVideo] = useState(localStorage.getItem('entrance_video_url') || '');
@@ -168,6 +171,7 @@ export default function SettingsPage() {
     'French (Français)',
     'German (Deutsch)',
     'Portuguese (Português)',
+    'Romanian (Română)',
     'Traditional Chinese (繁體中文)'
   ];
 
@@ -213,6 +217,35 @@ export default function SettingsPage() {
             <span className="text-[11px] text-amber-400 font-medium">Full Master Admin Privileges Granted</span>
           </div>
         )}
+      </div>
+
+      {/* Backoffice UI Language Selector Card */}
+      <div className="glass-card p-4 rounded-2xl border border-slate-800 bg-slate-900/80 shadow-xl space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center text-white shadow-lg shadow-indigo-900/50 flex-shrink-0">
+              <Globe className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="font-bold text-sm text-white">{t('settings.backofficeLanguage')}</h3>
+              <p className="text-xs text-slate-400">{t('settings.selectLanguage')}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <select
+              value={backofficeLang}
+              onChange={(e) => setBackofficeLang(e.target.value)}
+              className="bg-slate-950 border border-slate-700 text-white font-bold text-xs rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500/50 cursor-pointer"
+            >
+              {supportedLanguages.map((lang) => (
+                <option key={lang.code} value={lang.code}>
+                  {lang.flag} {lang.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Active AI Mobile Line Display Card */}

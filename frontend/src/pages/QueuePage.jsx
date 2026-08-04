@@ -1,8 +1,10 @@
 import React from 'react';
-import { ShieldAlert, CheckCircle2, Sparkles, Inbox } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Sparkles } from 'lucide-react';
 import ReviewCard from '../components/ReviewCard';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulator }) {
+  const { t } = useLanguage();
   const safeReviews = Array.isArray(reviews) ? reviews : [];
 
   return (
@@ -13,10 +15,10 @@ export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulato
           <div>
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-5 h-5 text-rose-400" />
-              <h2 className="font-bold text-base text-white">Pending Manager Reviews</h2>
+              <h2 className="font-bold text-base text-white">{t('queue.title')}</h2>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Review & approve AI drafts for discounts, complaints & custom queries
+              {t('queue.subtitle')}
             </p>
           </div>
 
@@ -32,16 +34,16 @@ export default function QueuePage({ reviews, onApprove, onReject, onOpenSimulato
           <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mx-auto mb-3 border border-emerald-500/20">
             <CheckCircle2 className="w-6 h-6" />
           </div>
-          <h3 className="font-bold text-slate-100 text-sm">All Clear!</h3>
+          <h3 className="font-bold text-slate-100 text-sm">{t('queue.emptyTitle')}</h3>
           <p className="text-xs text-slate-400 mt-1 max-w-xs mx-auto">
-            No pending AI responses require manager review right now.
+            {t('queue.emptyDesc')}
           </p>
           <button
             onClick={onOpenSimulator}
             className="mt-4 bg-red-600 hover:bg-red-500 text-white text-xs font-semibold px-4 py-2 rounded-xl transition inline-flex items-center gap-1.5 shadow-lg shadow-red-950/40"
           >
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Test Simulator</span>
+            <span>{t('nav.simulator')}</span>
           </button>
         </div>
       ) : (

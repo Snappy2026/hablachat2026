@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { CalendarCheck, Filter } from 'lucide-react';
+import { CalendarCheck } from 'lucide-react';
 import { getBookings, updateBookingStatus } from '../services/api';
 import BookingCard from '../components/BookingCard';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BookingsPage() {
+  const { t } = useLanguage();
   const [bookings, setBookings] = useState([]);
   const [filter, setFilter] = useState('all');
 
@@ -43,9 +45,9 @@ export default function BookingsPage() {
         <div>
           <h2 className="font-bold text-base text-white flex items-center gap-2">
             <CalendarCheck className="w-5 h-5 text-teal-400" />
-            <span>Extracted Bookings</span>
+            <span>{t('bookings.title')}</span>
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">Appointments auto-parsed by Claude (Haiku 4.5) AI</p>
+          <p className="text-xs text-slate-400 mt-0.5">{t('bookings.subtitle')}</p>
         </div>
 
         <div className="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-xs">
@@ -63,7 +65,7 @@ export default function BookingsPage() {
               filter === 'pending' ? 'bg-amber-500/20 font-semibold text-amber-400' : 'text-slate-400'
             }`}
           >
-            Pending
+            {t('bookings.pending')}
           </button>
           <button
             onClick={() => setFilter('confirmed')}
@@ -71,14 +73,14 @@ export default function BookingsPage() {
               filter === 'confirmed' ? 'bg-emerald-500/20 font-semibold text-emerald-400' : 'text-slate-400'
             }`}
           >
-            Confirmed
+            {t('bookings.confirmed')}
           </button>
         </div>
       </div>
 
       <div className="space-y-3">
         {filteredBookings.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-400">No appointments found matching filter.</div>
+          <div className="text-center py-8 text-xs text-slate-400">{t('bookings.noBookings')}</div>
         ) : (
           filteredBookings.map((b) => (
             <BookingCard key={b.id} booking={b} onUpdateStatus={handleUpdateStatus} />

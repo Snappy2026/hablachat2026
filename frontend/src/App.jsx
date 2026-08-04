@@ -13,6 +13,8 @@ import PublicChatPage from './pages/PublicChatPage';
 import { getPendingReviews, approveReview, rejectReview, getOnboardingStatus, getWeeklyCharge } from './services/api';
 import { wsService } from './services/websocket';
 
+import { LanguageProvider } from './context/LanguageContext';
+
 export default function App() {
   // App view: 'landing' | 'onboarding' | 'dashboard' | 'public_chat'
   const [appView, setAppView] = useState('landing');

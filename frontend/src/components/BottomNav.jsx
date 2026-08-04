@@ -1,21 +1,24 @@
 import React from 'react';
 import { ShieldAlert, MessageCircle, CalendarCheck, Settings } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function BottomNav({ activeTab, setActiveTab, pendingReviewCount }) {
+  const { t } = useLanguage();
+
   const tabs = [
     {
       id: 'messages',
-      label: 'Messages',
+      label: t('nav.messages'),
       icon: MessageCircle,
     },
     {
       id: 'bookings',
-      label: 'Bookings',
+      label: t('nav.bookings'),
       icon: CalendarCheck,
     },
     {
       id: 'settings',
-      label: 'Bot Setup',
+      label: t('nav.settings'),
       icon: Settings,
     },
   ];

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { MessageCircle, Send, User, Sparkles, UserCheck, ArrowLeft, Clock, AlertCircle } from 'lucide-react';
+import { MessageCircle, Send, User, Sparkles, UserCheck, ArrowLeft } from 'lucide-react';
 import { getSessions, getSessionMessages, sendManualReply } from '../services/api';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function MessagesPage() {
+  const { t } = useLanguage();
   const [sessions, setSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -74,7 +76,7 @@ export default function MessagesPage() {
         {/* Message Timeline */}
         <div className="flex-1 overflow-y-auto space-y-3 p-2 no-scrollbar">
           {loading ? (
-            <div className="text-center text-xs text-slate-400 py-8">Loading chat history...</div>
+            <div className="text-center text-xs text-slate-400 py-8">{t('common.loading')}</div>
           ) : (
             messages.map((m) => {
               const isClient = m.sender === 'client';
@@ -123,7 +125,7 @@ export default function MessagesPage() {
             type="text"
             value={replyContent}
             onChange={(e) => setReplyContent(e.target.value)}
-            placeholder="Type direct manager response to client..."
+            placeholder={t('messages.typeMessage')}
             className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:ring-1 focus:ring-emerald-500"
           />
           <button
@@ -143,14 +145,14 @@ export default function MessagesPage() {
       <div className="glass-panel p-4 rounded-2xl border border-slate-800">
         <h2 className="font-bold text-base text-white flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-emerald-400" />
-          <span>Active Client Conversations</span>
+          <span>{t('messages.title')}</span>
         </h2>
-        <p className="text-xs text-slate-400 mt-0.5">Select a thread to view full history or take over live</p>
+        <p className="text-xs text-slate-400 mt-0.5">{t('messages.noChatSelected')}</p>
       </div>
 
       <div className="space-y-2">
         {sessions.length === 0 ? (
-          <div className="text-center py-8 text-xs text-slate-400">No active chat sessions found.</div>
+          <div className="text-center py-8 text-xs text-slate-400">{t('messages.noClientsFound')}</div>
         ) : (
           sessions.map((sess) => (
             <button

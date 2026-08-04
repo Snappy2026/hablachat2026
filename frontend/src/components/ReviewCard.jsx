@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import { Check, Edit3, X, AlertTriangle, Sparkles, MessageCircle, Send, HelpCircle } from 'lucide-react';
+import { Check, Edit3, X, AlertTriangle, Sparkles, MessageCircle, Send } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function ReviewCard({ item, onApprove, onReject }) {
+  const { t } = useLanguage();
   const [isEditing, setIsEditing] = useState(false);
   const [editedText, setEditedText] = useState(item.proposed_reply);
   const [loading, setLoading] = useState(false);
@@ -46,7 +48,7 @@ export default function ReviewCard({ item, onApprove, onReject }) {
         {/* Confidence Score Badge */}
         <div className="text-right">
           <div className="flex items-center justify-end gap-1 text-[11px] font-semibold text-amber-400">
-            <span>Confidence</span>
+            <span>{t('queue.confidenceScore')}</span>
             <span>{confidencePct}%</span>
           </div>
           <div className="w-16 h-1.5 bg-slate-800 rounded-full mt-1 overflow-hidden">
@@ -82,14 +84,14 @@ export default function ReviewCard({ item, onApprove, onReject }) {
         <div className="flex items-center justify-between mb-1.5">
           <div className="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400">
             <Sparkles className="w-3.5 h-3.5 text-emerald-400" />
-            <span>Claude Proposed Reply:</span>
+            <span>{t('queue.suggestedReply')}</span>
           </div>
           {!isEditing && (
             <button
               onClick={() => setIsEditing(true)}
               className="text-[11px] text-slate-400 hover:text-emerald-300 flex items-center gap-1 font-medium"
             >
-              <Edit3 className="w-3 h-3" /> Edit Draft
+              <Edit3 className="w-3 h-3" /> {t('queue.edit')}
             </button>
           )}
         </div>
@@ -107,7 +109,7 @@ export default function ReviewCard({ item, onApprove, onReject }) {
                 onClick={() => { setIsEditing(false); setEditedText(item.proposed_reply); }}
                 className="text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -126,7 +128,7 @@ export default function ReviewCard({ item, onApprove, onReject }) {
           className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-semibold py-2.5 px-3 rounded-xl flex items-center justify-center gap-1.5 shadow-md shadow-emerald-950/40 active:scale-95 transition disabled:opacity-50"
         >
           {isEditing ? <Send className="w-4 h-4" /> : <Check className="w-4 h-4" />}
-          <span>{isEditing ? 'Send Edited Reply' : 'Approve & Send'}</span>
+          <span>{isEditing ? t('messages.send') : t('queue.approve')}</span>
         </button>
 
         <button
@@ -136,7 +138,7 @@ export default function ReviewCard({ item, onApprove, onReject }) {
           title="Reject AI draft & manual takeover"
         >
           <X className="w-4 h-4" />
-          <span>Reject</span>
+          <span>{t('queue.reject')}</span>
         </button>
       </div>
     </div>
