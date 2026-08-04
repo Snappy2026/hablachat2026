@@ -22,6 +22,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   // Step 1 — Details
   const [modelName, setModelName] = useState('');
   const [email, setEmail] = useState('');
+  const [passcode, setPasscode] = useState('1234');
   const [address, setAddress] = useState('');
   const [postcode, setPostcode] = useState('');
   const [clientId, setClientId] = useState(null);
@@ -70,7 +71,15 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     setError(null);
     localStorage.setItem('onboarding_model_name', modelName);
     localStorage.setItem('onboarding_email', email);
+    localStorage.setItem('user_custom_pin', passcode || '1234');
     localStorage.setItem('onboarding_address', address || 'Madrid');
+    localStorage.setItem('onboarding_postcode', postcode || '28029');
+
+    // Asynchronous background registration so UI never blocks
+    registerBusiness({
+      model_name: modelName,
+      email: email,
+      address: address || 'Madrid',
     localStorage.setItem('onboarding_postcode', postcode || '28029');
 
     // Asynchronous background registration so UI never blocks
@@ -309,10 +318,26 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="e.g. anna@escortspec.com"
+                  placeholder="e.g. info@jskcorp.com"
                   required
                   className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-medium"
                 />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-medium text-slate-400 mb-1 flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> Create 4-Digit Security PIN *
+                </label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={passcode}
+                  onChange={(e) => setPasscode(e.target.value)}
+                  placeholder="e.g. 1234"
+                  required
+                  className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-emerald-500 font-mono font-bold tracking-widest"
+                />
+                <p className="text-[10px] text-slate-500 mt-1">You will use this 4-digit PIN + email to log into your dashboard anytime.</p>
               </div>
 
               <div>
