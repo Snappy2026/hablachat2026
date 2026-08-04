@@ -4,7 +4,7 @@ import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, dele
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
-  const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '+44 7791 126970');
+  const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '+1 (509) 472-0397');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
