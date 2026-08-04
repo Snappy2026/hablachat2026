@@ -4,7 +4,7 @@ import { getSettings, updateSettings, getReplyPatterns, createReplyPattern, dele
 
 export default function SettingsPage() {
   const [settingsData, setSettingsData] = useState(null);
-  const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '');
+  const [assignedPhone, setAssignedPhone] = useState(localStorage.getItem('purchased_phone_number') || '+44 7791 126970');
   const [autoReply, setAutoReply] = useState(true);
   const [threshold, setThreshold] = useState(0.85);
   const [systemPrompt, setSystemPrompt] = useState('');
@@ -17,7 +17,10 @@ export default function SettingsPage() {
   const [newReply, setNewReply] = useState('');
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
-  const [isMasterAdmin, setIsMasterAdmin] = useState(false);
+  
+  // Master admin mode ONLY enabled if URL has ?admin=master
+  const isMasterUrl = new URLSearchParams(window.location.search).get('admin') === 'master';
+  const [isMasterAdmin, setIsMasterAdmin] = useState(isMasterUrl);
   const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || 'Habla2026!');
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
@@ -187,17 +190,19 @@ export default function SettingsPage() {
               {isMasterAdmin ? 'Full control over client roster, system prompts, and Twilio lines' : 'Manage your active mobile line and message signature'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setIsMasterAdmin(!isMasterAdmin)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
-              isMasterAdmin 
-                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
-                : 'bg-slate-800 text-slate-300 border-slate-700'
-            }`}
-          >
-            <span>{isMasterAdmin ? '👑 Master Admin Mode' : '📱 Member View'}</span>
-          </button>
+          {isMasterUrl && (
+            <button
+              type="button"
+              onClick={() => setIsMasterAdmin(!isMasterAdmin)}
+              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
+                isMasterAdmin 
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
+                  : 'bg-slate-800 text-slate-300 border-slate-700'
+              }`}
+            >
+              <span>{isMasterAdmin ? '👑 Master Admin Mode' : '📱 Member View'}</span>
+            </button>
+          )}
         </div>
 
         {/* Master Admin Info Banner */}
