@@ -107,3 +107,64 @@ def configure_all_webhooks():
         "already_correct": len([r for r in results if r.get("already_correct")]),
         "numbers": results
     }
+
+
+@router.get("/compliance-info")
+def get_compliance_info():
+    """
+    Diagnostic: show all regulatory bundles, addresses, and active numbers on the Twilio account.
+    """
+    client = twilio_numbers_service._ensure_client()
+    if not client:
+        return {"error": "Twilio client not initialized"}
+
+    info = {"bundles": [], "addresses": [], "active_numbers": []}
+
+    try:
+        bundles = client.numbers.v2.regulatory_compliance.bundles.list(limit=20)
+        for b in bundles:
+            info["bundles"].append({
+                "sid": b.sid,
+                "friendly_name": b.friendly_name,
+                "status": b.status,
+                "regulation_sid": getattr(b, "regulation_sid", ""),
+                "valid_until": str(getattr(b, "valid_until", "")),
+            })
+    except Exception as e:
+        info["bundles_error"] = str(e)
+
+    try:
+        addresses = client.addresses.list(limit=10)
+        for a in addresses:
+            info["addresses"].append({
+                "sid": a.sid,
+                "friendly_name": a.friendly_name,
+                "street": a.street,
+                "city": a.city,
+                "region": a.region,
+                "postal_code": a.postal_code,
+                "iso_country": a.iso_country,
+            })
+    except Exception as e:
+        info["addresses_error"] = str(e)
+
+    try:
+        numbers = client.incoming_phone_numbers.list(limit=20)
+        for n in numbers:
+            info["active_numbers"].append({
+                "sid": n.sid,
+                "phone_number": n.phone_number,
+                "friendly_name": n.friendly_name,
+                "sms_url": n.sms_url,
+                "capabilities": {
+                    "sms": getattr(n.capabilities, "sms", None),
+                    "mms": getattr(n.capabilities, "mms", None),
+                    "voice": getattr(n.capabilities, "voice", None),
+                },
+                "bundle_sid": getattr(n, "bundle_sid", ""),
+            })
+    except Exception as e:
+        info["numbers_error"] = str(e)
+
+    return info
+
