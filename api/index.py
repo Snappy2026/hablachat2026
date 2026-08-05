@@ -3,6 +3,8 @@ import sys
 import traceback
 import json
 
+# Build version: 2026-08-05T19:00 — force Vercel function rebuild
+
 api_dir = os.path.dirname(os.path.abspath(__file__))
 if api_dir not in sys.path:
     sys.path.insert(0, api_dir)
