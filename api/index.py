@@ -1,12 +1,13 @@
 import os
 import sys
+import traceback
+import json
 
-# Add the 'api' directory to sys.path so 'app' can be imported natively
 api_dir = os.path.dirname(os.path.abspath(__file__))
 if api_dir not in sys.path:
     sys.path.insert(0, api_dir)
 
-from app.main import app
+from app.main import app as main_app
 from app.database import engine, Base
 from app.seed import seed_demo_data
 
@@ -15,3 +16,20 @@ try:
     seed_demo_data()
 except Exception as e:
     print(f"[Vercel Init] DB setup note: {e}")
+
+async def app(scope, receive, send):
+    try:
+        await main_app(scope, receive, send)
+    except Exception as e:
+        err = traceback.format_exc()
+        print(f"ASGI CRASH: {err}")
+        if scope["type"] == "http":
+            await send({
+                "type": "http.response.start",
+                "status": 500,
+                "headers": [(b"content-type", b"application/json")]
+            })
+            await send({
+                "type": "http.response.body",
+                "body": json.dumps({"error": "crash", "trace": err}).encode("utf-8")
+            })
