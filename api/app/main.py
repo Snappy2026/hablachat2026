@@ -18,7 +18,7 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 # Ensure uploads directory exists
-UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+UPLOADS_DIR = "/tmp/uploads" if os.environ.get("VERCEL") == "1" else os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 os.makedirs(os.path.join(UPLOADS_DIR, "videos"), exist_ok=True)
 os.makedirs(os.path.join(UPLOADS_DIR, "photos"), exist_ok=True)
 
