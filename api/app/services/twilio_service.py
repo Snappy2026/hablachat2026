@@ -48,7 +48,7 @@ class TwilioService:
             logger.warning(f"Error querying active client phone number: {e}")
 
         # Default fallback for UK & European clients
-        return "+447791126970"
+        return settings.TWILIO_PHONE_NUMBER
 
     def send_message(self, to_number: str, body: str, channel: str = "sms") -> str:
         """
