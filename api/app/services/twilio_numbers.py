@@ -1,14 +1,37 @@
 import uuid
+import os
 import logging
 from app.config import settings
 
 logger = logging.getLogger("twilio_numbers")
 
 
+def _get_webhook_base_url() -> str:
+    """
+    Determine the correct webhook base URL for this deployment.
+    Priority: WEBHOOK_BASE_URL env var > VERCEL_URL > hardcoded domain.
+    """
+    custom = os.getenv("WEBHOOK_BASE_URL", "")
+    if custom:
+        return custom.rstrip("/")
+
+    vercel_url = os.getenv("VERCEL_URL", "")
+    if vercel_url:
+        return f"https://{vercel_url}"
+
+    return "https://hablachat.app"
+
+
 class TwilioNumbersService:
     def __init__(self):
-        self.account_sid = settings.TWILIO_ACCOUNT_SID
-        self.auth_token = settings.TWILIO_AUTH_TOKEN
+        self._init_client()
+
+    def _init_client(self):
+        import os as _os
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"), override=True)
+        self.account_sid = _os.getenv("TWILIO_ACCOUNT_SID", settings.TWILIO_ACCOUNT_SID)
+        self.auth_token = _os.getenv("TWILIO_AUTH_TOKEN", settings.TWILIO_AUTH_TOKEN)
         self._client = None
 
         if self.account_sid and not self.account_sid.startswith("your_") and self.auth_token and not self.auth_token.startswith("your_"):
@@ -21,7 +44,6 @@ class TwilioNumbersService:
     def search_available_numbers(self, country_code: str = "GB", area_code: str = None, contains: str = None, limit: int = 10) -> list:
         """
         Search Twilio's inventory for AVAILABLE MOBILE NUMBERS ONLY (SMS & WhatsApp enabled).
-        Returns a list of dicts with mobile number details.
         """
         if self._client:
             try:
@@ -29,7 +51,6 @@ class TwilioNumbersService:
                 if contains:
                     kwargs["contains"] = contains
 
-                # Search Mobile numbers specifically
                 try:
                     numbers = self._client.available_phone_numbers(country_code).mobile.list(**kwargs)
                 except Exception:
@@ -55,17 +76,55 @@ class TwilioNumbersService:
         else:
             return self._mock_numbers(country_code)
 
-    def purchase_number(self, phone_number: str, webhook_base_url: str = "https://your-domain.com", bundle_sid: str = None, address_sid: str = None) -> dict:
+    def _configure_existing_number(self, phone_number: str, webhook_url: str) -> dict:
         """
-        Purchase a phone number from Twilio and configure webhooks.
-        Returns dict with phone_number and twilio_sid.
+        If the number is already owned on this Twilio account, find it
+        and update its webhook URL so inbound SMS is forwarded to our app.
+        Returns the result dict or None if the number is not found.
         """
-        webhook_url = f"{webhook_base_url}/api/webhooks/twilio"
+        if not self._client:
+            return None
+
+        try:
+            clean = phone_number.replace(" ", "")
+            existing = self._client.incoming_phone_numbers.list(phone_number=clean, limit=1)
+            if existing:
+                num = existing[0]
+                # Update the SMS webhook URL
+                num.update(sms_url=webhook_url, sms_method="POST")
+                logger.info(f"Updated webhook for existing number {clean} (SID: {num.sid}) -> {webhook_url}")
+                return {
+                    "phone_number": num.phone_number,
+                    "twilio_sid": num.sid,
+                    "status": "active",
+                    "webhook_configured": True
+                }
+        except Exception as e:
+            logger.warning(f"Error checking/updating existing number {phone_number}: {e}")
+
+        return None
+
+    def purchase_number(self, phone_number: str, webhook_base_url: str = None, bundle_sid: str = None, address_sid: str = None) -> dict:
+        """
+        Purchase a phone number from Twilio and configure webhooks automatically.
+        If the number is already owned, updates its webhook instead.
+        Returns dict with phone_number, twilio_sid, and status.
+        """
+        # Always use the auto-detected webhook URL
+        base_url = webhook_base_url or _get_webhook_base_url()
+        webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
+        logger.info(f"Purchase/configure number {phone_number} with webhook: {webhook_url}")
 
         if self._client:
+            # Step 1: Check if number is already owned on this account
+            existing = self._configure_existing_number(phone_number, webhook_url)
+            if existing:
+                return existing
+
+            # Step 2: Try to purchase the number fresh
             try:
                 kwargs = {
-                    "phone_number": phone_number,
+                    "phone_number": phone_number.replace(" ", ""),
                     "sms_url": webhook_url,
                     "sms_method": "POST"
                 }
@@ -73,21 +132,25 @@ class TwilioNumbersService:
                     kwargs["bundle_sid"] = bundle_sid
                 if address_sid:
                     kwargs["address_sid"] = address_sid
-                    
+
                 incoming = self._client.incoming_phone_numbers.create(**kwargs)
-                logger.info(f"Successfully purchased Twilio mobile number: {phone_number} (SID: {incoming.sid})")
+                logger.info(f"Successfully purchased Twilio number: {phone_number} (SID: {incoming.sid}) with webhook: {webhook_url}")
                 return {
                     "phone_number": incoming.phone_number,
                     "twilio_sid": incoming.sid,
-                    "status": "active"
+                    "status": "active",
+                    "webhook_configured": True
                 }
             except Exception as e:
-                logger.error(f"Error purchasing Twilio number: {e}")
+                logger.error(f"Error purchasing Twilio number {phone_number}: {e}")
+                # Return the error so the caller knows what happened
                 mock_sid = f"PN_MOCK_{uuid.uuid4().hex[:16]}"
                 return {
                     "phone_number": phone_number,
                     "twilio_sid": mock_sid,
-                    "status": "simulated"
+                    "status": "simulated",
+                    "error": str(e),
+                    "webhook_configured": False
                 }
         else:
             mock_sid = f"PN_MOCK_{uuid.uuid4().hex[:16]}"
@@ -95,8 +158,37 @@ class TwilioNumbersService:
             return {
                 "phone_number": phone_number,
                 "twilio_sid": mock_sid,
-                "status": "simulated"
+                "status": "simulated",
+                "webhook_configured": False
             }
+
+    def configure_all_numbers(self, webhook_base_url: str = None) -> list:
+        """
+        Iterate over ALL numbers currently owned on the Twilio account
+        and ensure each one's SMS webhook points to our app.
+        Useful as a one-time migration or on-demand fix.
+        """
+        base_url = webhook_base_url or _get_webhook_base_url()
+        webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
+        results = []
+
+        if not self._client:
+            return results
+
+        try:
+            numbers = self._client.incoming_phone_numbers.list(limit=50)
+            for num in numbers:
+                current_url = num.sms_url or ""
+                if current_url != webhook_url:
+                    num.update(sms_url=webhook_url, sms_method="POST")
+                    logger.info(f"Updated webhook for {num.phone_number}: {current_url} -> {webhook_url}")
+                    results.append({"phone_number": num.phone_number, "sid": num.sid, "updated": True})
+                else:
+                    results.append({"phone_number": num.phone_number, "sid": num.sid, "updated": False, "already_correct": True})
+        except Exception as e:
+            logger.error(f"Error configuring all numbers: {e}")
+
+        return results
 
     def release_number(self, twilio_sid: str) -> bool:
         """Release a purchased number back to Twilio."""
@@ -113,7 +205,7 @@ class TwilioNumbersService:
             return True
 
     def _mock_numbers(self, country_code: str = "GB") -> list:
-        """Return mock mobile numbers (SMS & WhatsApp capable) for local development."""
+        """Return mock mobile numbers for local development."""
         import random
 
         mobile_prefixes = {

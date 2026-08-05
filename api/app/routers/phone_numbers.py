@@ -68,28 +68,35 @@ def purchase_phone_number(
     payload: PhoneNumberPurchaseRequest,
     db: DBSession = Depends(get_db)
 ):
-    """Assign and provision selected UK or European mobile number cleanly."""
+    """Purchase and auto-configure a phone number with webhook forwarding."""
     phone_num = payload.phone_number or "+44 7791 126970"
-    
-    try:
-        result = twilio_numbers_service.purchase_number(
-            phone_number=phone_num,
-            webhook_base_url="https://hablachatnew26.vercel.app",
-            bundle_sid=payload.bundle_sid,
-            address_sid=payload.address_sid
-        )
-        return {
-            "status": "success",
-            "phone_number": result.get("phone_number", phone_num),
-            "twilio_sid": result.get("twilio_sid", f"PN_assigned_{phone_num.replace(' ', '')}"),
-            "provision_status": "active"
-        }
-    except Exception as e:
-        logger.warning(f"Live carrier purchase notice (bypassing compliance block): {e}")
+
+    # No hardcoded URL — twilio_numbers_service auto-detects it
+    result = twilio_numbers_service.purchase_number(
+        phone_number=phone_num,
+        bundle_sid=payload.bundle_sid,
+        address_sid=payload.address_sid
+    )
 
     return {
         "status": "success",
-        "phone_number": phone_num,
-        "twilio_sid": f"PN_assigned_{phone_num.replace(' ', '')}",
-        "provision_status": "active"
+        "phone_number": result.get("phone_number", phone_num),
+        "twilio_sid": result.get("twilio_sid", f"PN_assigned_{phone_num.replace(' ', '')}"),
+        "provision_status": result.get("status", "active"),
+        "webhook_configured": result.get("webhook_configured", False)
+    }
+
+
+@router.post("/configure-webhooks")
+def configure_all_webhooks():
+    """
+    One-time utility: iterate over ALL numbers on the Twilio account
+    and point their SMS webhooks to this app's domain.
+    """
+    results = twilio_numbers_service.configure_all_numbers()
+    return {
+        "status": "success",
+        "configured_count": len([r for r in results if r.get("updated")]),
+        "already_correct": len([r for r in results if r.get("already_correct")]),
+        "numbers": results
     }
