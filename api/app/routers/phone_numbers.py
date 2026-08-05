@@ -20,6 +20,17 @@ def search_available_numbers(
 ):
     """Search Telnyx & Twilio inventory for instant UK & European numbers."""
     try:
+        results = twilio_numbers_service.search_available_numbers(
+            country_code=country,
+            area_code=area_code,
+            contains=contains,
+            limit=10
+        )
+        if results:
+            return results
+    except Exception as e:
+        logger.warning(f"Error querying live Twilio inventory: {e}")
+    try:
         if telnyx_service.is_configured():
             telnyx_results = telnyx_service.search_numbers(country_code=country, limit=10)
             if telnyx_results:
@@ -36,17 +47,6 @@ def search_available_numbers(
                 ]
     except Exception as err:
         logger.warning(f"Telnyx search error: {err}")
-    try:
-        results = twilio_numbers_service.search_available_numbers(
-            country_code=country,
-            area_code=area_code,
-            contains=contains,
-            limit=10
-        )
-        if results:
-            return results
-    except Exception as e:
-        logger.warning(f"Error querying live Twilio inventory: {e}")
 
     # Fallback list of curated mobile lines so onboarding search never fails
     if country == "GB":
