@@ -9,9 +9,9 @@ if backend_dir not in sys.path:
 if root_dir not in sys.path:
     sys.path.insert(0, root_dir)
 
-from backend.app.main import app
-from backend.app.database import engine, Base
-from backend.app.seed import seed_demo_data
+from app.main import app
+from app.database import engine, Base
+from app.seed import seed_demo_data
 
 try:
     Base.metadata.create_all(bind=engine)
