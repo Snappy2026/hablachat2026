@@ -24,20 +24,25 @@ class TelnyxService:
             headers = {"Authorization": f"Bearer {self.api_key}"}
             params = {
                 "filter[country_code]": country_code,
-                "filter[limit]": limit
+                "filter[limit]": limit,
+                "filter[phone_number_type]": "mobile"
             }
             res = requests.get(url, headers=headers, params=params, timeout=10)
             if res.status_code == 200:
                 data = res.json().get("data", [])
-                return [
-                    {
-                        "phone_number": item.get("phone_number"),
-                        "friendly_name": f"{item.get('phone_number')} ({country_code} Mobile)",
+                results = []
+                for item in data:
+                    phone = item.get("phone_number") or ""
+                    friendly = phone
+                    if country_code == "GB" and phone.startswith("+447"):
+                        friendly = f"0{phone[3:]}"
+                    results.append({
+                        "phone_number": phone,
+                        "friendly_name": f"{friendly} (UK Mobile)" if country_code == "GB" else f"{friendly} (Mobile)",
                         "locality": item.get("region", country_code),
                         "country": country_code
-                    }
-                    for item in data
-                ]
+                    })
+                return results
         except Exception as e:
             logger.error(f"Error searching Telnyx numbers: {e}")
         return []
