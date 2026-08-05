@@ -110,6 +110,7 @@ def configure_all_webhooks():
 
 
 @router.get("/compliance-info")
+@router.post("/compliance-info")
 def get_compliance_info():
     """
     Diagnostic: show all regulatory bundles, addresses, and active numbers on the Twilio account.
