@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const [passcodeSaved, setPasscodeSaved] = useState(false);
   const [clientList, setClientList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [weeklyPriceInput, setWeeklyPriceInput] = useState('0.50');
+  const [weeklyPriceInput, setWeeklyPriceInput] = useState('0.05');
   const [priceSavedMsg, setPriceSavedMsg] = useState(false);
   const [mediaRefresh, setMediaRefresh] = useState(0);
 
@@ -38,7 +38,7 @@ export default function SettingsPage() {
     fetchSettings();
     fetchPatterns();
     fetchClients();
-    getWeeklyCharge().then(d => setWeeklyPriceInput(String(d.weekly_charge || '0.50'))).catch(() => {});
+    getWeeklyCharge().then(d => setWeeklyPriceInput(String(d.weekly_charge || '0.05'))).catch(() => {});
   }, []);
 
   const fetchClients = async () => {

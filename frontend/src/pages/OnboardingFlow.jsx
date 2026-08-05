@@ -202,7 +202,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       payment_method: paymentMethod || 'card',
       card_last4: '4242',
       plan_type: 'weekly',
-      amount: weeklyCharge?.weekly_charge || 0.50,
+      amount: weeklyCharge?.weekly_charge || 0.05,
       currency: 'GBP'
     }).then((stripeRes) => {
       if (stripeRes && stripeRes.checkout_url) {
@@ -518,7 +518,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
           <div className="space-y-4 animate-fade-in-up">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-white mb-1">Select Number & Activate</h2>
-              <p className="text-xs text-slate-400">Choose your AI mobile line and activate your £0.50 weekly pass</p>
+              <p className="text-xs text-slate-400">Choose your AI mobile line and activate your £0.05 weekly pass</p>
             </div>
 
             {/* Search Controls */}
@@ -603,7 +603,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                   </div>
                   <div className="text-right">
                     <span className="text-xs text-slate-400 block">Weekly Pass</span>
-                    <span className="text-base font-bold text-white">£{weeklyCharge?.weekly_charge || '0.50'}</span>
+                    <span className="text-base font-bold text-white">£{weeklyCharge?.weekly_charge || '0.05'}</span>
                   </div>
                 </div>
 
@@ -620,7 +620,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Pay £{weeklyCharge?.weekly_charge || '0.50'} & Activate AI Line
+                      Pay £{weeklyCharge?.weekly_charge || '0.05'} & Activate AI Line
                     </>
                   )}
                 </button>

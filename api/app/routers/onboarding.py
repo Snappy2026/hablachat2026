@@ -42,7 +42,7 @@ def get_onboarding_status(db: DBSession = Depends(get_db)):
 @router.get("/weekly-charge")
 def get_weekly_charge(db: DBSession = Depends(get_db)):
     """Get the admin-configured weekly subscription charge."""
-    charge = get_setting(db, "weekly_charge", "0.10")
+    charge = get_setting(db, "weekly_charge", "0.05")
     return {"weekly_charge": float(charge), "currency": "GBP", "symbol": "£"}
 
 

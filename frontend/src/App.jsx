@@ -19,7 +19,7 @@ export default function App() {
   // App view: 'landing' | 'onboarding' | 'dashboard' | 'public_chat'
   const [appView, setAppView] = useState('landing');
   const [chatModelName, setChatModelName] = useState('Anna');
-  const [weeklyCharge, setWeeklyCharge] = useState(0.50);
+  const [weeklyCharge, setWeeklyCharge] = useState(0.05);
 
   const [activeTab, setActiveTab] = useState('messages');
   const [reviews, setReviews] = useState([]);
@@ -48,7 +48,7 @@ export default function App() {
       const isAuth = localStorage.getItem('admin_authenticated') === 'true';
       const savedView = localStorage.getItem('app_view');
 
-      getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 0.50)).catch(() => {});
+      getWeeklyCharge().then(data => setWeeklyCharge(data.weekly_charge || 0.05)).catch(() => {});
 
       if (chatParam || window.location.pathname.startsWith('/chat/')) {
         const pathName = window.location.pathname.replace('/chat/', '');

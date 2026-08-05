@@ -19,7 +19,7 @@ class CheckoutRequest(BaseModel):
     payment_method: str = "card" # card, apple_pay, google_pay
     card_last4: Optional[str] = "4242"
     plan_type: str = "weekly"
-    amount: float = 0.10
+    amount: float = 0.05
     currency: str = "GBP"
 
 class SubscriptionResponse(BaseModel):
@@ -33,18 +33,18 @@ class SubscriptionResponse(BaseModel):
 
 @router.post("/create-checkout-session")
 def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_db)):
-    """Create a live Stripe Checkout Session for £0.10 weekly pass."""
+    """Create a live Stripe Checkout Session for £0.05 weekly pass."""
     try:
         url = "https://api.stripe.com/v1/checkout/sessions"
         headers = {
             "Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        charge_str = get_setting(db, "weekly_charge", "0.10")
+        charge_str = get_setting(db, "weekly_charge", "0.05")
         try:
             charge_pence = int(float(charge_str) * 100)
         except Exception:
-            charge_pence = 10
+            charge_pence = 5
 
         data = {
             "payment_method_types[]": "card",
@@ -94,11 +94,11 @@ def process_checkout(payload: CheckoutRequest, db: Session = Depends(get_db)):
 def get_subscription_status(client_id: int, db: Session = Depends(get_db)):
     client = db.query(Client).filter(Client.id == client_id).first()
     is_active = (client.status == "active") if client else True
-    charge_str = get_setting(db, "weekly_charge", "0.10")
+    charge_str = get_setting(db, "weekly_charge", "0.05")
     try:
         price = float(charge_str)
     except Exception:
-        price = 0.10
+        price = 0.05
     return {
         "client_id": client_id,
         "active": is_active,
