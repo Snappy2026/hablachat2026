@@ -9,9 +9,10 @@ db_url = settings.DATABASE_URL
 if os.environ.get("VERCEL") == "1" and "sqlite" in db_url:
     db_url = "sqlite:////tmp/massage_bot_v2.db"
 
-# Replace standard postgres:// with postgresql:// for SQLAlchemy
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
+# Use pg8000 (pure python driver) for Vercel Serverless safety
+if db_url.startswith("postgres://") or db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgres://", "postgresql+pg8000://", 1)
+    db_url = db_url.replace("postgresql://", "postgresql+pg8000://", 1)
 
 connect_args = {"check_same_thread": False} if "sqlite" in db_url else {}
 
