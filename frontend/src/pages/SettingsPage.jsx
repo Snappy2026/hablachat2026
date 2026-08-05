@@ -187,19 +187,19 @@ export default function SettingsPage() {
     <div className="space-y-4 pb-20">
       <div className="glass-panel p-4 rounded-2xl border border-slate-800 space-y-3">
         <div className="flex items-center justify-between">
-          <div>
+          <div className="min-w-0 flex-1 pr-2">
             <h2 className="font-bold text-base text-white flex items-center gap-2">
-              <Settings className="w-5 h-5 text-emerald-400" />
-              <span>{isMasterAdmin ? '👑 Master Agency Admin Portal' : 'Bot Control & Setup'}</span>
+              <Settings className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+              <span className="truncate">{isMasterAdmin ? '👑 Master Agency Admin Portal' : 'Bot Control & Setup'}</span>
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5 break-words">
               {isMasterAdmin ? 'Full control over client roster, system prompts, and Twilio lines' : 'Manage your active mobile line and message signature'}
             </p>
           </div>
           <button
             type="button"
             onClick={() => setIsMasterAdmin(!isMasterAdmin)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 flex-shrink-0 ${
               isMasterAdmin 
                 ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
                 : 'bg-slate-800 text-slate-300 border-slate-700'
