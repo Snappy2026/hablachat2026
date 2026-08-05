@@ -196,19 +196,17 @@ export default function SettingsPage() {
               {isMasterAdmin ? 'Full control over client roster, system prompts, and Twilio lines' : 'Manage your active mobile line and message signature'}
             </p>
           </div>
-          {isMasterUrl && (
-            <button
-              type="button"
-              onClick={() => setIsMasterAdmin(!isMasterAdmin)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
-                isMasterAdmin 
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
-                  : 'bg-slate-800 text-slate-300 border-slate-700'
-              }`}
-            >
-              <span>{isMasterAdmin ? '👑 Master Admin Mode' : '📱 Member View'}</span>
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={() => setIsMasterAdmin(!isMasterAdmin)}
+            className={`px-3 py-1.5 rounded-xl text-xs font-extrabold border transition active:scale-95 flex items-center gap-1.5 ${
+              isMasterAdmin 
+                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-lg shadow-amber-950/40' 
+                : 'bg-slate-800 text-slate-300 border-slate-700'
+            }`}
+          >
+            <span>{isMasterAdmin ? '👑 Master Admin Mode' : '📱 Member View'}</span>
+          </button>
         </div>
 
         {/* Master Admin Info Banner */}
