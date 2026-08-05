@@ -104,6 +104,7 @@ class SettingsOut(BaseModel):
     tone: str = "Warm & Luxurious Spa"
     custom_signature: Optional[str] = "thanks babe x"
     anthropic_api_key_configured: bool = False
+    venice_api_key_configured: bool = False
     moonshot_api_key_configured: bool = False
     twilio_configured: bool
 

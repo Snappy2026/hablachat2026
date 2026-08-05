@@ -7,6 +7,11 @@ class Settings(BaseSettings):
     ANTHROPIC_BASE_URL: str = "https://api.anthropic.com/v1"
     ANTHROPIC_MODEL: str = "claude-haiku-4-5-20251001"
 
+    # Venice AI Settings (Uncensored Cloud LLM)
+    VENICE_API_KEY: str = os.getenv("VENICE_API_KEY", "")
+    VENICE_BASE_URL: str = "https://api.venice.ai/api/v1"
+    VENICE_MODEL: str = os.getenv("VENICE_MODEL", "llama-3.3-70b")
+
     # Legacy alias support
     MOONSHOT_API_KEY: str = ""
     MOONSHOT_BASE_URL: str = ""

@@ -47,6 +47,7 @@ class ClaudeEngine:
         load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"), override=True)
         self.anthropic_key = os.getenv("ANTHROPIC_API_KEY", getattr(settings, "ANTHROPIC_API_KEY", ""))
         self.openai_key = os.getenv("OPENAI_API_KEY", getattr(settings, "OPENAI_API_KEY", ""))
+        self.venice_key = os.getenv("VENICE_API_KEY", getattr(settings, "VENICE_API_KEY", ""))
         self.base_url = settings.ANTHROPIC_BASE_URL or "https://api.anthropic.com/v1"
         self.model = getattr(settings, "ANTHROPIC_MODEL", "claude-haiku-4-5-20251001") or "claude-haiku-4-5-20251001"
 
@@ -54,9 +55,11 @@ class ClaudeEngine:
         import os
         anth_key = os.getenv("ANTHROPIC_API_KEY", self.anthropic_key)
         oai_key = os.getenv("OPENAI_API_KEY", self.openai_key)
+        ven_key = os.getenv("VENICE_API_KEY", self.venice_key)
         anth = bool(anth_key and not anth_key.startswith("your_"))
         oai = bool(oai_key and not oai_key.startswith("your_"))
-        return anth or oai
+        ven = bool(ven_key and not ven_key.startswith("your_"))
+        return anth or oai or ven
 
     def analyze_message(
         self,
@@ -68,7 +71,7 @@ class ClaudeEngine:
         signature: str = None
     ) -> ClaudeAnalysisOutput:
         """
-        Calls Anthropic Claude (Haiku 4.5) or OpenAI (GPT-4o-mini) API to analyze incoming message.
+        Calls Anthropic Claude (Haiku 4.5), Venice AI (Uncensored), or OpenAI (GPT-4o-mini) API to analyze incoming message.
         """
         system_prompt = custom_prompt if custom_prompt else DEFAULT_SYSTEM_PROMPT
 
@@ -106,9 +109,61 @@ class ClaudeEngine:
                 import os
                 anth_key = os.getenv("ANTHROPIC_API_KEY", self.anthropic_key)
                 oai_key = os.getenv("OPENAI_API_KEY", self.openai_key)
+                ven_key = os.getenv("VENICE_API_KEY", self.venice_key)
+
+                # Check if using Venice AI API key (Uncensored Cloud LLM)
+                if ven_key and not ven_key.startswith("your_"):
+                    headers = {
+                        "Authorization": f"Bearer {ven_key}",
+                        "Content-Type": "application/json"
+                    }
+                    endpoint = f"{settings.VENICE_BASE_URL.rstrip('/')}/chat/completions"
+                    venice_messages = [{"role": "system", "content": system_prompt}] + formatted_messages
+                    payload = {
+                        "model": getattr(settings, "VENICE_MODEL", "llama-3.3-70b") or "llama-3.3-70b",
+                        "response_format": {"type": "json_object"},
+                        "temperature": 0.3,
+                        "messages": venice_messages
+                    }
+                    response = requests.post(endpoint, headers=headers, json=payload, timeout=15)
+                    if response.status_code == 200:
+                        resp_data = response.json()
+                        content_text = resp_data["choices"][0]["message"]["content"].strip()
+                        if "```" in content_text:
+                            content_text = content_text.split("```")[1]
+                            if content_text.startswith("json"):
+                                content_text = content_text[4:].strip()
+                        data = json.loads(content_text)
+                        return ClaudeAnalysisOutput(**data)
 
                 # Check if using Anthropic API key
-                if anth_key and not anth_key.startswith("your_"):
+                elif anth_key and not anth_key.startswith("your_"):
+                    headers = {
+                        "x-api-key": anth_key,
+                        "anthropic-version": "2023-06-01",
+                        "content-type": "application/json"
+                    }
+                    endpoint = f"{self.base_url.rstrip('/')}/messages"
+                    payload = {
+                        "model": self.model,
+                        "max_tokens": 1024,
+                        "temperature": 0.3,
+                        "system": system_prompt,
+                        "messages": formatted_messages
+                    }
+                    response = requests.post(endpoint, headers=headers, json=payload, timeout=15)
+                    if response.status_code == 200:
+                        resp_data = response.json()
+                        content_text = resp_data["content"][0]["text"].strip()
+                        if "```" in content_text:
+                            content_text = content_text.split("```")[1]
+                            if content_text.startswith("json"):
+                                content_text = content_text[4:].strip()
+                        data = json.loads(content_text)
+                        return ClaudeAnalysisOutput(**data)
+
+                # Check if using OpenAI API key
+                elif self.openai_key and not self.openai_key.startswith("your_"):
                     headers = {
                         "x-api-key": anth_key,
                         "anthropic-version": "2023-06-01",
