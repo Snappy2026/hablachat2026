@@ -159,6 +159,8 @@ class PhoneNumberSearchResult(BaseModel):
 class PhoneNumberPurchaseRequest(BaseModel):
     phone_number: str
     country_code: str = "GB"
+    bundle_sid: Optional[str] = None
+    address_sid: Optional[str] = None
 
 class OnboardingCompleteRequest(BaseModel):
     entrance_video_url: Optional[str] = None

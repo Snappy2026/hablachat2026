@@ -74,7 +74,9 @@ def purchase_phone_number(
     try:
         result = twilio_numbers_service.purchase_number(
             phone_number=phone_num,
-            webhook_base_url="https://hablachat.vercel.app"
+            webhook_base_url="https://hablachatnew26.vercel.app",
+            bundle_sid=payload.bundle_sid,
+            address_sid=payload.address_sid
         )
         return {
             "status": "success",

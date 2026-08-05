@@ -150,10 +150,12 @@ export const updateWeeklyCharge = async (chargeAmount) => {
   return response.data;
 };
 
-export const purchasePhoneNumber = async (phoneNumber, countryCode = 'GB') => {
+export const purchasePhoneNumber = async (phoneNumber, countryCode = 'GB', bundleSid = null, addressSid = null) => {
   const response = await api.post('/phone-numbers/purchase', {
     phone_number: phoneNumber,
     country_code: countryCode,
+    bundle_sid: bundleSid,
+    address_sid: addressSid,
   });
   return response.data;
 };

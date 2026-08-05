@@ -55,7 +55,7 @@ class TwilioNumbersService:
         else:
             return self._mock_numbers(country_code)
 
-    def purchase_number(self, phone_number: str, webhook_base_url: str = "https://your-domain.com") -> dict:
+    def purchase_number(self, phone_number: str, webhook_base_url: str = "https://your-domain.com", bundle_sid: str = None, address_sid: str = None) -> dict:
         """
         Purchase a phone number from Twilio and configure webhooks.
         Returns dict with phone_number and twilio_sid.
@@ -64,11 +64,17 @@ class TwilioNumbersService:
 
         if self._client:
             try:
-                incoming = self._client.incoming_phone_numbers.create(
-                    phone_number=phone_number,
-                    sms_url=webhook_url,
-                    sms_method="POST",
-                )
+                kwargs = {
+                    "phone_number": phone_number,
+                    "sms_url": webhook_url,
+                    "sms_method": "POST"
+                }
+                if bundle_sid:
+                    kwargs["bundle_sid"] = bundle_sid
+                if address_sid:
+                    kwargs["address_sid"] = address_sid
+                    
+                incoming = self._client.incoming_phone_numbers.create(**kwargs)
                 logger.info(f"Successfully purchased Twilio mobile number: {phone_number} (SID: {incoming.sid})")
                 return {
                     "phone_number": incoming.phone_number,
