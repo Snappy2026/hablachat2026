@@ -157,6 +157,7 @@ export default function App() {
     const savedMasterPasscode = localStorage.getItem('master_admin_passcode') || '197666666';
     if (pinInput === savedMasterPasscode) {
       localStorage.setItem('admin_authenticated', 'true');
+      localStorage.setItem('is_master_admin', 'true');
       localStorage.setItem('app_view', 'dashboard');
       setIsPinModalOpen(false);
       setPinInput('');

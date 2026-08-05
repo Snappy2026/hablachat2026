@@ -22,9 +22,9 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(false);
   const [savedMsg, setSavedMsg] = useState(false);
   
-  // Master admin mode ONLY enabled if URL has ?admin=master
+  // Master admin mode enabled if URL has ?admin=master OR logged in via master passcode
   const isMasterUrl = new URLSearchParams(window.location.search).get('admin') === 'master';
-  const [isMasterAdmin, setIsMasterAdmin] = useState(isMasterUrl);
+  const [isMasterAdmin, setIsMasterAdmin] = useState(isMasterUrl || localStorage.getItem('is_master_admin') === 'true');
   const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || '197666666');
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
