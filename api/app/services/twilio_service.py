@@ -37,13 +37,14 @@ class TwilioService:
             db = SessionLocal()
             client = db.query(Client).filter(
                 Client.status == "active",
-                Client.phone_number.isnot(None),
-                Client.onboarded_at.isnot(None)
+                Client.phone_number.isnot(None)
             ).order_by(Client.id.desc()).first()
             db.close()
 
-            if client and client.phone_number and client.phone_number.startswith("+"):
-                return client.phone_number.replace(" ", "")
+            if client and client.phone_number:
+                # Clean clean format: +15094720397 etc.
+                cleaned = client.phone_number.replace(" ", "").replace("-", "").replace("(", "").replace(")", "")
+                return cleaned
         except Exception as e:
             logger.warning(f"Error querying active client phone number: {e}")
 
