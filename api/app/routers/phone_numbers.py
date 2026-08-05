@@ -71,20 +71,27 @@ def purchase_phone_number(
     """Purchase and auto-configure a phone number with webhook forwarding."""
     phone_num = payload.phone_number or "+44 7791 126970"
 
-    # No hardcoded URL — twilio_numbers_service auto-detects it
+    # Auto-detects webhook URL + auto-discovers regulatory bundle
     result = twilio_numbers_service.purchase_number(
         phone_number=phone_num,
         bundle_sid=payload.bundle_sid,
         address_sid=payload.address_sid
     )
 
-    return {
-        "status": "success",
+    # Report the real status — don't fake success if purchase failed
+    purchase_status = result.get("status", "unknown")
+    response = {
+        "status": "success" if purchase_status == "active" else "error",
         "phone_number": result.get("phone_number", phone_num),
-        "twilio_sid": result.get("twilio_sid", f"PN_assigned_{phone_num.replace(' ', '')}"),
-        "provision_status": result.get("status", "active"),
+        "twilio_sid": result.get("twilio_sid", ""),
+        "provision_status": purchase_status,
         "webhook_configured": result.get("webhook_configured", False)
     }
+
+    if result.get("error"):
+        response["error"] = result["error"]
+
+    return response
 
 
 @router.post("/configure-webhooks")

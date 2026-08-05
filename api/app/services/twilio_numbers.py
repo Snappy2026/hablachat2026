@@ -27,6 +27,7 @@ class TwilioNumbersService:
         self._client = None
         self.account_sid = ""
         self.auth_token = ""
+        self._bundle_sid = None  # Cached regulatory bundle SID
 
     def _ensure_client(self):
         """Lazy-init the Twilio client on first use (works reliably on Vercel serverless)."""
@@ -53,9 +54,44 @@ class TwilioNumbersService:
 
         return self._client
 
+    def _get_regulatory_bundle_sid(self) -> str:
+        """
+        Auto-discover the approved Regulatory Bundle SID from Twilio.
+        Checks env var first, then queries the Twilio API for an approved bundle.
+        Caches the result so it's only looked up once per cold start.
+        """
+        # Check env var first
+        env_bundle = os.getenv("TWILIO_BUNDLE_SID", "")
+        if env_bundle:
+            return env_bundle
+
+        # Use cached value
+        if self._bundle_sid:
+            return self._bundle_sid
+
+        if not self._ensure_client():
+            return ""
+
+        try:
+            bundles = self._client.numbers.v2.regulatory_compliance.bundles.list(
+                status="twilio-approved",
+                limit=5
+            )
+            for bundle in bundles:
+                logger.info(f"Found approved regulatory bundle: {bundle.sid} ({bundle.friendly_name})")
+                self._bundle_sid = bundle.sid
+                return bundle.sid
+
+            logger.warning("No approved regulatory bundles found on this Twilio account.")
+        except Exception as e:
+            logger.warning(f"Error fetching regulatory bundles: {e}")
+
+        return ""
+
     def search_available_numbers(self, country_code: str = "GB", area_code: str = None, contains: str = None, limit: int = 10) -> list:
         """
-        Search Twilio's inventory for AVAILABLE MOBILE NUMBERS ONLY (SMS & WhatsApp enabled).
+        Search Twilio's inventory for MOBILE NUMBERS ONLY.
+        Never falls back to landline/geographic numbers.
         """
         if self._ensure_client():
             try:
@@ -63,23 +99,30 @@ class TwilioNumbersService:
                 if contains:
                     kwargs["contains"] = contains
 
-                try:
-                    numbers = self._client.available_phone_numbers(country_code).mobile.list(**kwargs)
-                except Exception:
-                    numbers = self._client.available_phone_numbers(country_code).local.list(**kwargs)
+                # MOBILE ONLY — no fallback to local/landline
+                numbers = self._client.available_phone_numbers(country_code).mobile.list(**kwargs)
 
                 results = []
                 for n in numbers:
+                    phone = n.phone_number
+                    # Format UK mobile numbers as 07xxx for display
+                    friendly = n.friendly_name
+                    if country_code == "GB" and phone.startswith("+447"):
+                        friendly = f"0{phone[3:]}"  # +447xxx -> 07xxx
+
                     results.append({
-                        "phone_number": n.phone_number,
-                        "friendly_name": n.friendly_name,
+                        "phone_number": phone,
+                        "friendly_name": f"{friendly} (UK Mobile)" if country_code == "GB" else f"{friendly} (Mobile)",
                         "locality": getattr(n, "locality", "") or "Mobile",
                         "region": "SMS & WhatsApp Mobile",
                         "country_code": country_code,
                         "monthly_cost": "£1.00" if country_code == "GB" else "€1.00"
                     })
+
                 if results:
                     return results
+
+                logger.warning(f"No mobile numbers available from Twilio for country: {country_code}")
                 return self._mock_numbers(country_code)
 
             except Exception as e:
@@ -92,7 +135,6 @@ class TwilioNumbersService:
         """
         If the number is already owned on this Twilio account, find it
         and update its webhook URL so inbound SMS is forwarded to our app.
-        Returns the result dict or None if the number is not found.
         """
         if not self._ensure_client():
             return None
@@ -102,7 +144,6 @@ class TwilioNumbersService:
             existing = self._client.incoming_phone_numbers.list(phone_number=clean, limit=1)
             if existing:
                 num = existing[0]
-                # Update the SMS webhook URL
                 num.update(sms_url=webhook_url, sms_method="POST")
                 logger.info(f"Updated webhook for existing number {clean} (SID: {num.sid}) -> {webhook_url}")
                 return {
@@ -118,35 +159,41 @@ class TwilioNumbersService:
 
     def purchase_number(self, phone_number: str, webhook_base_url: str = None, bundle_sid: str = None, address_sid: str = None) -> dict:
         """
-        Purchase a phone number from Twilio and configure webhooks automatically.
+        Purchase a MOBILE number from Twilio with:
+        1. Automatic webhook configuration
+        2. Automatic regulatory bundle attachment (for UK/EU numbers)
         If the number is already owned, updates its webhook instead.
-        Returns dict with phone_number, twilio_sid, and status.
         """
-        # Always use the auto-detected webhook URL
         base_url = webhook_base_url or _get_webhook_base_url()
         webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
-        logger.info(f"Purchase/configure number {phone_number} with webhook: {webhook_url}")
 
         if self._ensure_client():
-            # Step 1: Check if number is already owned on this account
+            # Step 1: Check if number is already owned
             existing = self._configure_existing_number(phone_number, webhook_url)
             if existing:
                 return existing
 
-            # Step 2: Try to purchase the number fresh
+            # Step 2: Auto-discover regulatory bundle if not provided
+            regulatory_bundle = bundle_sid or self._get_regulatory_bundle_sid()
+
+            # Step 3: Purchase the number
             try:
                 kwargs = {
                     "phone_number": phone_number.replace(" ", ""),
                     "sms_url": webhook_url,
                     "sms_method": "POST"
                 }
-                if bundle_sid:
-                    kwargs["bundle_sid"] = bundle_sid
+
+                # Attach regulatory bundle for UK/EU compliance
+                if regulatory_bundle:
+                    kwargs["bundle_sid"] = regulatory_bundle
+                    logger.info(f"Attaching regulatory bundle {regulatory_bundle} to purchase of {phone_number}")
+
                 if address_sid:
                     kwargs["address_sid"] = address_sid
 
                 incoming = self._client.incoming_phone_numbers.create(**kwargs)
-                logger.info(f"Successfully purchased Twilio number: {phone_number} (SID: {incoming.sid}) with webhook: {webhook_url}")
+                logger.info(f"Successfully purchased mobile number: {phone_number} (SID: {incoming.sid}) with webhook: {webhook_url}")
                 return {
                     "phone_number": incoming.phone_number,
                     "twilio_sid": incoming.sid,
@@ -154,23 +201,21 @@ class TwilioNumbersService:
                     "webhook_configured": True
                 }
             except Exception as e:
-                logger.error(f"Error purchasing Twilio number {phone_number}: {e}")
-                # Return the error so the caller knows what happened
-                mock_sid = f"PN_MOCK_{uuid.uuid4().hex[:16]}"
+                error_msg = str(e)
+                logger.error(f"PURCHASE FAILED for {phone_number}: {error_msg}")
                 return {
                     "phone_number": phone_number,
-                    "twilio_sid": mock_sid,
-                    "status": "simulated",
-                    "error": str(e),
+                    "twilio_sid": "",
+                    "status": "failed",
+                    "error": error_msg,
                     "webhook_configured": False
                 }
         else:
-            mock_sid = f"PN_MOCK_{uuid.uuid4().hex[:16]}"
-            logger.info(f"[SIMULATED] Purchased mobile number {phone_number} with SID: {mock_sid}")
             return {
                 "phone_number": phone_number,
-                "twilio_sid": mock_sid,
-                "status": "simulated",
+                "twilio_sid": "",
+                "status": "failed",
+                "error": "Twilio credentials not configured. Add TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN to environment variables.",
                 "webhook_configured": False
             }
 
@@ -178,7 +223,6 @@ class TwilioNumbersService:
         """
         Iterate over ALL numbers currently owned on the Twilio account
         and ensure each one's SMS webhook points to our app.
-        Useful as a one-time migration or on-demand fix.
         """
         base_url = webhook_base_url or _get_webhook_base_url()
         webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
@@ -217,11 +261,11 @@ class TwilioNumbersService:
             return True
 
     def _mock_numbers(self, country_code: str = "GB") -> list:
-        """Return mock mobile numbers for local development."""
+        """Return mock MOBILE numbers for local development."""
         import random
 
         mobile_prefixes = {
-            "GB": ("+447", ["7911", "7700", "7890", "7400", "7520", "7399", "7450", "7820", "7960", "7712"]),
+            "GB": ("+447", ["911", "700", "890", "400", "520", "399", "450", "820", "960", "712"]),
             "ES": ("+346", ["12", "23", "34", "45", "56", "67", "78", "89", "90"]),
             "FR": ("+336", ["12", "23", "34", "45", "56", "67", "78", "89"]),
             "DE": ("+49151", ["234", "345", "456", "567", "678", "789"]),
@@ -246,12 +290,16 @@ class TwilioNumbersService:
         mock_data = []
 
         for sub in sub_prefixes:
-            remaining_digits = 10 - len(sub) if country_code == "GB" else 6
-            suffix = "".join([str(random.randint(0, 9)) for _ in range(max(3, remaining_digits))])
+            suffix = "".join([str(random.randint(0, 9)) for _ in range(6)])
             number = f"{main_prefix}{sub}{suffix}"
+            # Format UK as 07xxx for display
+            if country_code == "GB":
+                friendly = f"0{number[3:]}"
+            else:
+                friendly = number
             mock_data.append({
                 "phone_number": number,
-                "friendly_name": f"{number[:4]} {number[4:7]} {number[7:]}",
+                "friendly_name": f"{friendly} (Mobile)",
                 "locality": "SMS & WhatsApp Mobile",
                 "region": "Mobile",
                 "country_code": country_code,
