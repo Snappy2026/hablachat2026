@@ -97,15 +97,31 @@ def purchase_phone_number(
 @router.post("/configure-webhooks")
 def configure_all_webhooks():
     """
-    One-time utility: iterate over ALL numbers on the Twilio account
-    and point their SMS webhooks to this app's domain.
+    Utility: configure all webhooks + return compliance/bundle info.
     """
     results = twilio_numbers_service.configure_all_numbers()
+
+    # Also fetch compliance bundles
+    bundles = []
+    client = twilio_numbers_service._ensure_client()
+    if client:
+        try:
+            bundle_list = client.numbers.v2.regulatory_compliance.bundles.list(limit=20)
+            for b in bundle_list:
+                bundles.append({
+                    "sid": b.sid,
+                    "friendly_name": b.friendly_name,
+                    "status": b.status,
+                })
+        except Exception as e:
+            bundles = [{"error": str(e)}]
+
     return {
         "status": "success",
         "configured_count": len([r for r in results if r.get("updated")]),
         "already_correct": len([r for r in results if r.get("already_correct")]),
-        "numbers": results
+        "numbers": results,
+        "regulatory_bundles": bundles
     }
 
 
