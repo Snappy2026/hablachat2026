@@ -24,28 +24,40 @@ def _get_webhook_base_url() -> str:
 
 class TwilioNumbersService:
     def __init__(self):
-        self._init_client()
-
-    def _init_client(self):
-        import os as _os
-        from dotenv import load_dotenv
-        load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"), override=True)
-        self.account_sid = _os.getenv("TWILIO_ACCOUNT_SID", settings.TWILIO_ACCOUNT_SID)
-        self.auth_token = _os.getenv("TWILIO_AUTH_TOKEN", settings.TWILIO_AUTH_TOKEN)
         self._client = None
+        self.account_sid = ""
+        self.auth_token = ""
+
+    def _ensure_client(self):
+        """Lazy-init the Twilio client on first use (works reliably on Vercel serverless)."""
+        if self._client:
+            return self._client
+
+        import os as _os
+        try:
+            from dotenv import load_dotenv
+            load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"), override=True)
+        except Exception:
+            pass
+
+        self.account_sid = _os.getenv("TWILIO_ACCOUNT_SID", "") or settings.TWILIO_ACCOUNT_SID
+        self.auth_token = _os.getenv("TWILIO_AUTH_TOKEN", "") or settings.TWILIO_AUTH_TOKEN
 
         if self.account_sid and not self.account_sid.startswith("your_") and self.auth_token and not self.auth_token.startswith("your_"):
             try:
                 from twilio.rest import Client
                 self._client = Client(self.account_sid, self.auth_token)
+                logger.info(f"Twilio numbers client initialized for account: {self.account_sid[:8]}...")
             except Exception as e:
                 logger.warning(f"Could not initialize Twilio client for number service: {e}")
+
+        return self._client
 
     def search_available_numbers(self, country_code: str = "GB", area_code: str = None, contains: str = None, limit: int = 10) -> list:
         """
         Search Twilio's inventory for AVAILABLE MOBILE NUMBERS ONLY (SMS & WhatsApp enabled).
         """
-        if self._client:
+        if self._ensure_client():
             try:
                 kwargs = {"limit": limit, "sms_enabled": True}
                 if contains:
@@ -82,7 +94,7 @@ class TwilioNumbersService:
         and update its webhook URL so inbound SMS is forwarded to our app.
         Returns the result dict or None if the number is not found.
         """
-        if not self._client:
+        if not self._ensure_client():
             return None
 
         try:
@@ -115,7 +127,7 @@ class TwilioNumbersService:
         webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
         logger.info(f"Purchase/configure number {phone_number} with webhook: {webhook_url}")
 
-        if self._client:
+        if self._ensure_client():
             # Step 1: Check if number is already owned on this account
             existing = self._configure_existing_number(phone_number, webhook_url)
             if existing:
@@ -172,7 +184,7 @@ class TwilioNumbersService:
         webhook_url = f"{base_url.rstrip('/')}/api/webhooks/twilio"
         results = []
 
-        if not self._client:
+        if not self._ensure_client():
             return results
 
         try:
@@ -192,7 +204,7 @@ class TwilioNumbersService:
 
     def release_number(self, twilio_sid: str) -> bool:
         """Release a purchased number back to Twilio."""
-        if self._client and not twilio_sid.startswith("PN_MOCK_"):
+        if self._ensure_client() and not twilio_sid.startswith("PN_MOCK_"):
             try:
                 self._client.incoming_phone_numbers(twilio_sid).delete()
                 logger.info(f"Released Twilio number SID: {twilio_sid}")
