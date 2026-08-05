@@ -25,13 +25,14 @@ export default function SettingsPage() {
   // Master admin mode ONLY enabled if URL has ?admin=master
   const isMasterUrl = new URLSearchParams(window.location.search).get('admin') === 'master';
   const [isMasterAdmin, setIsMasterAdmin] = useState(isMasterUrl);
-  const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || 'Habla2026!');
+  const [masterPasscode, setMasterPasscode] = useState(localStorage.getItem('master_admin_passcode') || '197666666');
   const [newMasterPasscode, setNewMasterPasscode] = useState('');
   const [passcodeSaved, setPasscodeSaved] = useState(false);
   const [clientList, setClientList] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [weeklyPriceInput, setWeeklyPriceInput] = useState('0.50');
   const [priceSavedMsg, setPriceSavedMsg] = useState(false);
+  const [mediaRefresh, setMediaRefresh] = useState(0);
 
   useEffect(() => {
     fetchSettings();
@@ -74,7 +75,7 @@ export default function SettingsPage() {
   };
 
   const handleUpdatePasscode = async (clientId, currentPasscode) => {
-    const newPin = prompt('Set private PIN / Password for this model account:', currentPasscode || '8888');
+    const newPin = prompt('Set private PIN / Password for this model account:', currentPasscode || '197666666');
     if (!newPin) return;
     try {
       await updateClientPasscode(clientId, newPin.trim());
@@ -213,7 +214,7 @@ export default function SettingsPage() {
         {/* Master Admin Info Banner */}
         {isMasterAdmin && (
           <div className="p-3 bg-amber-950/30 border border-amber-700/50 rounded-xl flex items-center justify-between text-xs text-amber-200">
-            <span className="font-semibold">🔑 Master Passcode: <span className="font-mono text-white font-extrabold tracking-wider bg-amber-900/60 px-2 py-0.5 rounded">8888</span></span>
+            <span className="font-semibold">🔑 Master Passcode: <span className="font-mono text-white font-extrabold tracking-wider bg-amber-900/60 px-2 py-0.5 rounded">••••••••</span></span>
             <span className="text-[11px] text-amber-400 font-medium">Full Master Admin Privileges Granted</span>
           </div>
         )}
@@ -312,100 +313,151 @@ export default function SettingsPage() {
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-emerald-400" />
           <div>
-            <h3 className="font-bold text-sm text-white">Building Entrance Video & Model Photos</h3>
-            <p className="text-[11px] text-slate-400">Manage media sent automatically by your AI assistant</p>
+            <h3 className="font-bold text-sm text-white">Media Gallery</h3>
+            <p className="text-[11px] text-slate-400">1 entrance video + 5 model photos · Auto-sent by AI</p>
           </div>
         </div>
 
-        {/* Building Entrance Video Uploader */}
+        {/* Building Entrance Video (1 slot) */}
         <div className="space-y-2 border-t border-slate-800/80 pt-3">
-          <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
-            <span>🎥 Building Entrance Video (Auto-sent when customer arrives)</span>
+          <label className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+            🎥 Building Entrance Video
+            <span className="text-[10px] font-normal text-slate-500">(Auto-sent when customer arrives)</span>
           </label>
           {entranceVideo ? (
-            <div className="flex items-center justify-between bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs">
-              <span className="text-emerald-400 font-medium truncate flex-1">✅ Active Video: {entranceVideo}</span>
-              <label className="ml-2 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs px-2.5 py-1.5 rounded-lg cursor-pointer transition flex-shrink-0 font-bold">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    try {
-                      const res = await uploadVideo(file);
-                      if (res && res.url) {
-                        setEntranceVideo(res.url);
-                        localStorage.setItem('entrance_video_url', res.url);
-                        alert('Building Entrance Video updated successfully!');
-                      }
-                    } catch (err) {
-                      alert('Error uploading video: ' + err.message);
-                    }
+            <div className="relative rounded-xl overflow-hidden border border-emerald-500/30 bg-slate-950">
+              <video
+                src={entranceVideo}
+                controls
+                className="w-full max-h-48 object-cover rounded-xl"
+              />
+              <div className="absolute top-2 right-2 flex gap-1.5">
+                <label className="bg-slate-900/90 hover:bg-slate-800 text-white text-[10px] font-bold px-2 py-1 rounded-lg cursor-pointer backdrop-blur-sm border border-slate-700">
+                  <input
+                    type="file"
+                    accept="video/mp4,video/quicktime,video/webm"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        setEntranceVideo(reader.result);
+                        localStorage.setItem('entrance_video_url', reader.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                  Replace
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEntranceVideo('');
+                    localStorage.removeItem('entrance_video_url');
                   }}
-                  className="hidden"
-                />
-                Replace Video
-              </label>
+                  className="bg-rose-900/90 hover:bg-rose-800 text-white text-[10px] font-bold px-2 py-1 rounded-lg backdrop-blur-sm border border-rose-700"
+                >
+                  Remove
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5">
-                <input
-                  type="file"
-                  accept="video/*"
-                  onChange={async (e) => {
-                    const file = e.target.files[0];
-                    if (!file) return;
-                    try {
-                      const res = await uploadVideo(file);
-                      if (res && res.url) {
-                        setEntranceVideo(res.url);
-                        localStorage.setItem('entrance_video_url', res.url);
-                        alert('Building Entrance Video uploaded successfully!');
-                      }
-                    } catch (err) {
-                      alert('Error uploading video: ' + err.message);
-                    }
-                  }}
-                  className="hidden"
-                />
-                <span>+ Upload Entrance Video (MP4, MOV)</span>
-              </label>
-            </div>
+            <label className="flex flex-col items-center justify-center h-28 border-2 border-dashed border-slate-700 hover:border-emerald-500/50 rounded-xl cursor-pointer transition-all bg-slate-950/50 hover:bg-emerald-950/20 group">
+              <input
+                type="file"
+                accept="video/mp4,video/quicktime,video/webm"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file) return;
+                  const reader = new FileReader();
+                  reader.onload = () => {
+                    setEntranceVideo(reader.result);
+                    localStorage.setItem('entrance_video_url', reader.result);
+                  };
+                  reader.readAsDataURL(file);
+                }}
+              />
+              <span className="text-2xl mb-1 group-hover:scale-110 transition-transform">🎬</span>
+              <span className="text-[11px] text-slate-400 group-hover:text-emerald-400 font-medium transition-colors">Tap to upload entrance video</span>
+              <span className="text-[10px] text-slate-600">MP4, MOV, WebM · Max 50MB</span>
+            </label>
           )}
         </div>
 
-        {/* Model Photos Uploader */}
+        {/* Model Photo Gallery (5 slots) */}
         <div className="space-y-2 border-t border-slate-800/80 pt-3">
           <label className="text-xs font-bold text-slate-200 flex items-center justify-between">
-            <span>📸 Model Photos (Auto-sent when customer asks for pics)</span>
+            <span className="flex items-center gap-1.5">
+              📸 Model Photos
+              <span className="text-[10px] font-normal text-slate-500">(Auto-sent when customer asks for pics)</span>
+            </span>
+            <span className="text-[10px] font-mono text-slate-500">
+              {JSON.parse(localStorage.getItem('model_photos') || '[]').length}/5
+            </span>
           </label>
-          <div className="flex items-center gap-2">
-            <label className="bg-emerald-950/60 hover:bg-emerald-900/80 border border-emerald-800/60 text-emerald-300 text-xs font-bold px-3.5 py-2.5 rounded-xl cursor-pointer transition flex items-center gap-1.5">
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={async (e) => {
-                  const files = Array.from(e.target.files || []);
-                  if (files.length === 0) return;
-                  try {
-                    const existing = JSON.parse(localStorage.getItem('model_photo_urls') || '[]');
-                    for (const file of files) {
-                      const res = await uploadPhoto(file);
-                      if (res && res.url) existing.push(res.url);
-                    }
-                    localStorage.setItem('model_photo_urls', JSON.stringify(existing));
-                    alert(`Uploaded ${files.length} model photo(s) successfully!`);
-                  } catch (err) {
-                    alert('Error uploading photos: ' + err.message);
-                  }
-                }}
-                className="hidden"
-              />
-              <span>+ Upload Model Photos</span>
-            </label>
+          <div className="grid grid-cols-5 gap-2">
+            {[0, 1, 2, 3, 4].map((slotIndex) => {
+              const photos = JSON.parse(localStorage.getItem('model_photos') || '[]');
+              const photo = photos[slotIndex] || null;
+
+              return (
+                <div key={slotIndex} className="aspect-[3/4] relative rounded-xl overflow-hidden">
+                  {photo ? (
+                    <>
+                      <img
+                        src={photo}
+                        alt={`Model photo ${slotIndex + 1}`}
+                        className="w-full h-full object-cover rounded-xl border border-emerald-500/30"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const current = JSON.parse(localStorage.getItem('model_photos') || '[]');
+                          current.splice(slotIndex, 1);
+                          localStorage.setItem('model_photos', JSON.stringify(current));
+                          // Force re-render
+                              setMediaRefresh(n => n + 1);
+                          window.dispatchEvent(new Event('storage'));
+                        }}
+                        className="absolute top-1 right-1 bg-rose-600/90 hover:bg-rose-500 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold backdrop-blur-sm shadow-md"
+                      >
+                        ✕
+                      </button>
+                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-1">
+                        <span className="text-[9px] text-white font-bold">#{slotIndex + 1}</span>
+                      </div>
+                    </>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full border-2 border-dashed border-slate-700 hover:border-emerald-500/40 rounded-xl cursor-pointer transition-all bg-slate-950/50 hover:bg-emerald-950/20 group">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          const reader = new FileReader();
+                          reader.onload = () => {
+                            const current = JSON.parse(localStorage.getItem('model_photos') || '[]');
+                            if (current.length < 5) {
+                              current.push(reader.result);
+                              localStorage.setItem('model_photos', JSON.stringify(current));
+                              // Force re-render
+                                  setMediaRefresh(n => n + 1);
+                            }
+                          };
+                          reader.readAsDataURL(file);
+                        }}
+                      />
+                      <span className="text-lg group-hover:scale-110 transition-transform">+</span>
+                      <span className="text-[9px] text-slate-500 group-hover:text-emerald-400 font-medium">{slotIndex + 1}</span>
+                    </label>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -577,7 +629,7 @@ export default function SettingsPage() {
                               className="bg-amber-950/40 hover:bg-amber-900/60 text-amber-300 border border-amber-800/50 text-[10px] font-bold px-2.5 py-1 rounded-lg transition active:scale-95 flex items-center gap-1"
                               title="Set or Update Account PIN / Password"
                             >
-                              🔑 PIN: {c.passcode || '8888'}
+                              🔑 PIN: {c.passcode || '••••'}
                             </button>
                             <button
                               type="button"

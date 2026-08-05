@@ -95,7 +95,7 @@ class Client(Base):
     model_name = Column(String(100), nullable=False)
     email = Column(String(200), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=True)
-    passcode = Column(String(50), default="8888")
+    passcode = Column(String(50), default="197666666")
     address = Column(Text, nullable=False)
     postcode = Column(String(20), nullable=False)
     entrance_video_url = Column(Text, nullable=True)

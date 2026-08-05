@@ -154,8 +154,8 @@ export default function App() {
 
   const handlePinSubmit = (e) => {
     e.preventDefault();
-    const savedMasterPasscode = localStorage.getItem('master_admin_passcode') || 'Habla2026!';
-    if (pinInput === savedMasterPasscode || pinInput === '8888' || pinInput === '1234') {
+    const savedMasterPasscode = localStorage.getItem('master_admin_passcode') || '197666666';
+    if (pinInput === savedMasterPasscode) {
       localStorage.setItem('admin_authenticated', 'true');
       localStorage.setItem('app_view', 'dashboard');
       setIsPinModalOpen(false);
@@ -222,24 +222,24 @@ export default function App() {
                 <span className="text-xl">🔒</span>
               </div>
               <h3 className="font-extrabold text-base text-white mb-1">Manager Passcode</h3>
-              <p className="text-xs text-slate-400 mb-4">Enter 4-digit PIN to access Manager Dashboard</p>
+              <p className="text-xs text-slate-400 mb-4">Enter passcode to access Manager Dashboard</p>
 
               <form onSubmit={handlePinSubmit} className="space-y-3">
                 <input
                   type="password"
-                  maxLength={4}
+                  maxLength={20}
                   value={pinInput}
                   onChange={(e) => {
                     setPinInput(e.target.value);
                     setPinError(false);
                   }}
-                  placeholder="• • • •"
+                  placeholder="Enter passcode"
                   className="w-full text-center text-xl font-bold tracking-widest bg-slate-900 border border-slate-800 rounded-xl py-3 text-white focus:outline-none focus:ring-2 focus:ring-rose-500/50"
                   autoFocus
                 />
 
                 {pinError && (
-                  <p className="text-rose-400 text-xs font-semibold">Incorrect PIN. Try 8888</p>
+                  <p className="text-rose-400 text-xs font-semibold">Incorrect passcode. Please try again.</p>
                 )}
 
                 <div className="flex gap-2 pt-1">

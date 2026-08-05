@@ -166,7 +166,7 @@ def get_all_clients(db: DBSession = Depends(get_db)):
             "status": c.status,
             "onboarded_at": c.onboarded_at.isoformat() if c.onboarded_at else "Pending Payment",
             "created_at": c.created_at.isoformat() if c.created_at else None,
-            "passcode": c.passcode or "8888"
+            "passcode": c.passcode or "197666666"
         }
         for c in clients
     ]
@@ -199,7 +199,7 @@ def update_client_phone(client_id: int, payload: dict, db: DBSession = Depends(g
 @router.post("/clients/{client_id}/passcode")
 def update_client_passcode(client_id: int, payload: dict, db: DBSession = Depends(get_db)):
     """Master Admin: Set or update passcode/PIN for a model account."""
-    new_passcode = payload.get("passcode", "8888")
+    new_passcode = payload.get("passcode", "197666666")
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:
         raise HTTPException(status_code=404, detail="Client not found.")
