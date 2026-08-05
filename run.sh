@@ -5,7 +5,7 @@ echo "🚀 Launching Claude (Haiku 4.5) Messaging Engine & PWA Admin App..."
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Virtualenv setup check
-VENV_DIR="$ROOT_DIR/backend/venv"
+VENV_DIR="$ROOT_DIR/api/venv"
 if [ ! -d "$VENV_DIR" ]; then
     echo "📦 Creating Python virtual environment..."
     python3 -m venv "$VENV_DIR"
@@ -14,12 +14,12 @@ fi
 echo "🐍 Activating Python virtual environment..."
 source "$VENV_DIR/bin/activate"
 
-# Ensure backend path is in PYTHONPATH
-export PYTHONPATH="$ROOT_DIR/backend"
+# Ensure api path is in PYTHONPATH
+export PYTHONPATH="$ROOT_DIR/api"
 
 # Start FastAPI Backend on Port 8085
 echo "🟢 Starting FastAPI Backend on http://localhost:8085..."
-cd "$ROOT_DIR/backend"
+cd "$ROOT_DIR/api"
 "$VENV_DIR/bin/python3" -m uvicorn app.main:app --host 0.0.0.0 --port 8085 --reload &
 BACKEND_PID=$!
 
