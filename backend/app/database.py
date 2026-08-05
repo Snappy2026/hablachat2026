@@ -8,7 +8,7 @@ import os
 # Handle SQLite threading requirement
 db_url = settings.DATABASE_URL
 if os.environ.get("VERCEL") == "1":
-    db_url = "sqlite:////tmp/massage_bot.db"
+    db_url = "sqlite:////tmp/massage_bot_v2.db"
 
 connect_args = {"check_same_thread": False} if "sqlite" in db_url else {}
 
