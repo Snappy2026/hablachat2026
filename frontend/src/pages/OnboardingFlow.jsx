@@ -221,14 +221,10 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         return;
       }
 
-      // Local dashboard fallback if Stripe URL is not returned
-      localStorage.setItem('admin_authenticated', 'true');
-      localStorage.setItem('app_view', 'dashboard');
-      setActivated(true);
-      if (onComplete) onComplete();
+      throw new Error(stripeRes?.error || 'Stripe integration is not configured correctly. Please set STRIPE_SECRET_KEY in Vercel environment variables.');
     } catch (err) {
       console.error('Activation & Purchase Error:', err);
-      setError(err.message || 'Error setting up your Twilio line. Please try again.');
+      setError(err.message || 'Error setting up your Twilio/Stripe activation. Please try again.');
       setActivating(false);
     }
   };
