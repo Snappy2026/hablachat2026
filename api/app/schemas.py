@@ -124,6 +124,7 @@ class ClientRegister(BaseModel):
     email: str
     address: str
     postcode: str
+    passcode: Optional[str] = None
 
 class ClientOut(BaseModel):
     id: int

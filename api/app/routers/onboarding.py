@@ -73,6 +73,8 @@ def register_business(payload: ClientRegister, db: DBSession = Depends(get_db)):
         existing.model_name = payload.model_name
         existing.address = payload.address
         existing.postcode = payload.postcode
+        if payload.passcode:
+            existing.passcode = payload.passcode
         db.commit()
         db.refresh(existing)
         return existing
@@ -85,6 +87,7 @@ def register_business(payload: ClientRegister, db: DBSession = Depends(get_db)):
             email=payload.email,
             address=payload.address,
             postcode=payload.postcode,
+            passcode=payload.passcode or "197666666",
             weekly_charge=weekly_charge,
             status="active"
         )

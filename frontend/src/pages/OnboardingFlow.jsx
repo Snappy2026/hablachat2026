@@ -82,6 +82,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       email: email,
       address: address || 'Madrid',
       postcode: postcode || '28029',
+      passcode: passcode || '1234',
     }).then(client => {
       if (client && client.id) setClientId(client.id);
     }).catch(err => {
