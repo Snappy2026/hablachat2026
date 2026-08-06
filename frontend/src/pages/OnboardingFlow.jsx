@@ -221,10 +221,27 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         return;
       }
 
-      throw new Error(stripeRes?.error || 'Stripe integration is not configured correctly. Please set STRIPE_SECRET_KEY in Vercel environment variables.');
+      const stripeErr = stripeRes?.error?.error?.message || stripeRes?.error?.message || (typeof stripeRes?.error === 'string' ? stripeRes.error : null);
+      throw new Error(stripeErr || 'Stripe integration is not configured correctly. Please check Vercel environment variables.');
     } catch (err) {
       console.error('Activation & Purchase Error:', err);
-      setError(err.message || 'Error setting up your Twilio/Stripe activation. Please try again.');
+      
+      // Extract the most descriptive error message
+      let displayError = 'Error setting up your Twilio/Stripe activation. Please try again.';
+      if (err.message && typeof err.message === 'string') {
+        displayError = err.message;
+      }
+      if (err.response?.data?.detail) {
+        displayError = typeof err.response.data.detail === 'string' 
+          ? err.response.data.detail 
+          : JSON.stringify(err.response.data.detail);
+      } else if (err.response?.data?.error) {
+        displayError = typeof err.response.data.error === 'string'
+          ? err.response.data.error
+          : (err.response.data.error.message || JSON.stringify(err.response.data.error));
+      }
+      
+      setError(displayError);
       setActivating(false);
     }
   };
