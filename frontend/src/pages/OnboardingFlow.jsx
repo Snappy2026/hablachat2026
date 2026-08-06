@@ -178,7 +178,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
   };
 
   // ─── Step 3 Activation with Live Stripe Checkout ───
-  const handleActivate = (e) => {
+  const handleActivate = async (e) => {
     if (e && e.preventDefault) e.preventDefault();
     setActivating(true);
     setError(null);
@@ -186,43 +186,51 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     const numToUse = selectedNumber ? selectedNumber.phone_number : '+44 7791 126970';
     const emailToUse = email || localStorage.getItem('onboarding_email') || 'client@hablachat.app';
 
-    localStorage.setItem('purchased_phone_number', numToUse);
+    try {
+      // 1. Purchase the selected phone number on Twilio and configure webhook forwarding
+      const purchaseRes = await purchasePhoneNumber(numToUse, country || 'GB');
+      
+      if (purchaseRes.status !== 'success') {
+        throw new Error(purchaseRes.error || 'Failed to purchase and provision the Twilio number. Please check your credentials/regulatory requirements.');
+      }
 
-    // Asynchronously save onboarding details in background
-    completeOnboarding({
-      entrance_video_url: videoUrl || '',
-      phone_number: numToUse,
-      twilio_number_sid: 'PN_demo_' + Math.random().toString(36).substring(7),
-      country_code: country || 'GB',
-    }).catch(() => null);
+      const twilioSid = purchaseRes.twilio_sid || 'PN_demo_' + Math.random().toString(36).substring(7);
+      localStorage.setItem('purchased_phone_number', numToUse);
 
-    // Try redirecting to live Stripe Checkout Session
-    createStripeCheckoutSession({
-      client_id: clientId || 1,
-      email: emailToUse,
-      payment_method: paymentMethod || 'card',
-      card_last4: '4242',
-      plan_type: 'weekly',
-      amount: weeklyCharge?.weekly_charge || 0.05,
-      currency: 'GBP'
-    }).then((stripeRes) => {
+      // 2. Complete onboarding with the verified Twilio phone number and SID
+      await completeOnboarding({
+        entrance_video_url: videoUrl || '',
+        phone_number: numToUse,
+        twilio_number_sid: twilioSid,
+        country_code: country || 'GB',
+      });
+
+      // 3. Create Stripe Checkout Session
+      const stripeRes = await createStripeCheckoutSession({
+        client_id: clientId || 1,
+        email: emailToUse,
+        payment_method: paymentMethod || 'card',
+        card_last4: '4242',
+        plan_type: 'weekly',
+        amount: weeklyCharge?.weekly_charge || 0.05,
+        currency: 'GBP'
+      });
+
       if (stripeRes && stripeRes.checkout_url) {
         window.location.href = stripeRes.checkout_url;
         return;
       }
-      // Instant Dashboard transition
+
+      // Local dashboard fallback if Stripe URL is not returned
       localStorage.setItem('admin_authenticated', 'true');
       localStorage.setItem('app_view', 'dashboard');
       setActivated(true);
       if (onComplete) onComplete();
-    }).catch(() => {
-      // Instant Dashboard transition fallback
-      localStorage.setItem('admin_authenticated', 'true');
-      localStorage.setItem('app_view', 'dashboard');
-      localStorage.setItem('purchased_phone_number', numToUse);
-      setActivated(true);
-      if (onComplete) onComplete();
-    });
+    } catch (err) {
+      console.error('Activation & Purchase Error:', err);
+      setError(err.message || 'Error setting up your Twilio line. Please try again.');
+      setActivating(false);
+    }
   };
 
   // ─── Progress Bar ───
@@ -624,19 +632,6 @@ export default function OnboardingFlow({ onComplete, onBack }) {
                       Pay £{weeklyCharge?.weekly_charge || '0.05'} & Activate AI Line
                     </>
                   )}
-                </button>
-
-                {/* Direct Failsafe Bypass Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    localStorage.setItem('admin_authenticated', 'true');
-                    localStorage.setItem('app_view', 'dashboard');
-                    if (onComplete) onComplete();
-                  }}
-                  className="w-full bg-slate-900 hover:bg-slate-800 text-emerald-400 font-bold text-xs py-2.5 rounded-xl border border-slate-800 transition active:scale-95 flex items-center justify-center gap-1.5"
-                >
-                  🚀 Skip & Open Dashboard Directly
                 </button>
               </div>
             )}
