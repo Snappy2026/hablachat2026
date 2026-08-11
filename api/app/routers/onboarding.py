@@ -43,7 +43,10 @@ def get_onboarding_status(db: DBSession = Depends(get_db)):
 def get_weekly_charge(db: DBSession = Depends(get_db)):
     """Get the admin-configured weekly subscription charge."""
     charge = get_setting(db, "weekly_charge", "0.30")
-    return {"weekly_charge": float(charge), "currency": "GBP", "symbol": "£"}
+    val = float(charge)
+    if val < 0.30:
+        val = 0.30
+    return {"weekly_charge": val, "currency": "GBP", "symbol": "£"}
 
 
 @router.post("/weekly-charge")

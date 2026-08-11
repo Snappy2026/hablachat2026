@@ -42,7 +42,10 @@ def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_
         }
         charge_str = get_setting(db, "weekly_charge", "0.30")
         try:
-            charge_pence = int(float(charge_str) * 100)
+            val = float(charge_str)
+            if val < 0.30:
+                val = 0.30
+            charge_pence = int(val * 100)
         except Exception:
             charge_pence = 30
 
