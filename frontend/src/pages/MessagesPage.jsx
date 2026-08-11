@@ -110,7 +110,7 @@ export default function MessagesPage() {
                     {/* Footer Status Tag */}
                     <div className="flex items-center justify-end gap-1 text-[9px] opacity-60 mt-1">
                       <span>{new Date(m.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {m.twilio_sid && <span className="font-mono">✓ Twilio</span>}
+                      {m.twilio_sid && <span className="font-mono">✓ Telnyx</span>}
                     </div>
                   </div>
                 </div>

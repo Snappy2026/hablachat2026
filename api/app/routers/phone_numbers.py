@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session as DBSession
 
 from app.database import get_db
 from app.schemas import PhoneNumberSearchResult, PhoneNumberPurchaseRequest
-from app.services.twilio_numbers import twilio_numbers_service
 from app.services.telnyx_service import telnyx_service
 
 logger = logging.getLogger("phone_numbers_router")
@@ -18,18 +17,7 @@ def search_available_numbers(
     contains: str = Query(None, description="Keyword or digits the number should contain"),
     db: DBSession = Depends(get_db)
 ):
-    """Search Telnyx & Twilio inventory for instant UK & European numbers."""
-    try:
-        results = twilio_numbers_service.search_available_numbers(
-            country_code=country,
-            area_code=area_code,
-            contains=contains,
-            limit=10
-        )
-        if results:
-            return results
-    except Exception as e:
-        logger.warning(f"Error querying live Twilio inventory: {e}")
+    """Search Telnyx inventory for instant UK & European numbers."""
     try:
         if telnyx_service.is_configured():
             telnyx_results = telnyx_service.search_numbers(country_code=country, limit=10)
@@ -71,11 +59,9 @@ def purchase_phone_number(
     """Purchase and auto-configure a phone number with webhook forwarding."""
     phone_num = payload.phone_number or "+44 7791 126970"
 
-    # Auto-detects webhook URL + auto-discovers regulatory bundle
-    result = twilio_numbers_service.purchase_number(
-        phone_number=phone_num,
-        bundle_sid=payload.bundle_sid,
-        address_sid=payload.address_sid
+    logger.info("Routing phone number purchase through Telnyx...")
+    result = telnyx_service.purchase_number(
+        phone_number=phone_num
     )
 
     # Report the real status — don't fake success if purchase failed
@@ -83,7 +69,7 @@ def purchase_phone_number(
     response = {
         "status": "success" if purchase_status == "active" else "error",
         "phone_number": result.get("phone_number", phone_num),
-        "twilio_sid": result.get("twilio_sid", ""),
+        "twilio_sid": result.get("twilio_sid", ""),  # Keep response compatible with frontend expected key
         "provision_status": purchase_status,
         "webhook_configured": result.get("webhook_configured", False)
     }
@@ -92,96 +78,3 @@ def purchase_phone_number(
         response["error"] = result["error"]
 
     return response
-
-
-@router.post("/configure-webhooks")
-def configure_all_webhooks():
-    """
-    Utility: configure all webhooks + return compliance/bundle info.
-    """
-    results = twilio_numbers_service.configure_all_numbers()
-
-    # Also fetch compliance bundles
-    bundles = []
-    client = twilio_numbers_service._ensure_client()
-    if client:
-        try:
-            bundle_list = client.numbers.v2.regulatory_compliance.bundles.list(limit=20)
-            for b in bundle_list:
-                bundles.append({
-                    "sid": b.sid,
-                    "friendly_name": b.friendly_name,
-                    "status": b.status,
-                })
-        except Exception as e:
-            bundles = [{"error": str(e)}]
-
-    return {
-        "status": "success",
-        "configured_count": len([r for r in results if r.get("updated")]),
-        "already_correct": len([r for r in results if r.get("already_correct")]),
-        "numbers": results,
-        "regulatory_bundles": bundles
-    }
-
-
-@router.get("/compliance-info")
-@router.post("/compliance-info")
-def get_compliance_info():
-    """
-    Diagnostic: show all regulatory bundles, addresses, and active numbers on the Twilio account.
-    """
-    client = twilio_numbers_service._ensure_client()
-    if not client:
-        return {"error": "Twilio client not initialized"}
-
-    info = {"bundles": [], "addresses": [], "active_numbers": []}
-
-    try:
-        bundles = client.numbers.v2.regulatory_compliance.bundles.list(limit=20)
-        for b in bundles:
-            info["bundles"].append({
-                "sid": b.sid,
-                "friendly_name": b.friendly_name,
-                "status": b.status,
-                "regulation_sid": getattr(b, "regulation_sid", ""),
-                "valid_until": str(getattr(b, "valid_until", "")),
-            })
-    except Exception as e:
-        info["bundles_error"] = str(e)
-
-    try:
-        addresses = client.addresses.list(limit=10)
-        for a in addresses:
-            info["addresses"].append({
-                "sid": a.sid,
-                "friendly_name": a.friendly_name,
-                "street": a.street,
-                "city": a.city,
-                "region": a.region,
-                "postal_code": a.postal_code,
-                "iso_country": a.iso_country,
-            })
-    except Exception as e:
-        info["addresses_error"] = str(e)
-
-    try:
-        numbers = client.incoming_phone_numbers.list(limit=20)
-        for n in numbers:
-            info["active_numbers"].append({
-                "sid": n.sid,
-                "phone_number": n.phone_number,
-                "friendly_name": n.friendly_name,
-                "sms_url": n.sms_url,
-                "capabilities": {
-                    "sms": getattr(n.capabilities, "sms", None),
-                    "mms": getattr(n.capabilities, "mms", None),
-                    "voice": getattr(n.capabilities, "voice", None),
-                },
-                "bundle_sid": getattr(n, "bundle_sid", ""),
-            })
-    except Exception as e:
-        info["numbers_error"] = str(e)
-
-    return info
-

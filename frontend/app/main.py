@@ -18,8 +18,9 @@ logging.basicConfig(
 logger = logging.getLogger("main")
 
 # Ensure uploads directory exists
-UPLOADS_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
+UPLOADS_DIR = "/tmp/uploads" if os.environ.get("VERCEL") == "1" else os.path.join(os.path.dirname(os.path.dirname(__file__)), "uploads")
 os.makedirs(os.path.join(UPLOADS_DIR, "videos"), exist_ok=True)
+os.makedirs(os.path.join(UPLOADS_DIR, "photos"), exist_ok=True)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,7 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Claude (Haiku 4.5) Massage Bot & Admin API",
-    description="Backend API for Twilio SMS/WhatsApp bot powered by Anthropic Claude (Haiku 4.5) with PWA Admin Dashboard",
+    description="Backend API for Telnyx SMS bot powered by Anthropic Claude (Haiku 4.5) with PWA Admin Dashboard",
     version="1.0.0",
     lifespan=lifespan
 )

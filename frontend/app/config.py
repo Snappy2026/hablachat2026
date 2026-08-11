@@ -17,10 +17,11 @@ class Settings(BaseSettings):
     MOONSHOT_BASE_URL: str = ""
     MOONSHOT_MODEL: str = ""
 
-    # Twilio Messaging Settings
-    TWILIO_ACCOUNT_SID: str = "your_twilio_account_sid_here"
-    TWILIO_AUTH_TOKEN: str = "your_twilio_auth_token_here"
-    TWILIO_PHONE_NUMBER: str = "+18005550199"
+
+    # Telnyx Messaging Settings (Instant UK & EU numbers)
+    TELNYX_API_KEY: str = os.getenv("TELNYX_API_KEY", "")
+    STRIPE_PUBLISHABLE_KEY: str = os.getenv("STRIPE_PUBLISHABLE_KEY", "pk_live_51SzkD5FBujpvbBXm92Ip2lz7GSeYnQmE62kgp4VFICpKqGBYbHCNEqaBuymgUU1BJtzrfLNXxuom6e9ay2hj6upy00YHFvCIQi")
+    STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
 
     # Database and Application Settings
     DATABASE_URL: str = "sqlite:////tmp/massage_bot.db"

@@ -2,8 +2,7 @@ import os
 import sys
 os.environ["VERCEL"] = "1"
 # emulate vercel env variables
-os.environ["TWILIO_ACCOUNT_SID"] = "test"
-os.environ["TWILIO_AUTH_TOKEN"] = "test"
+os.environ["TELNYX_API_KEY"] = "test"
 os.environ["ANTHROPIC_API_KEY"] = "test"
 
 # load index.py

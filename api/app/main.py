@@ -34,7 +34,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Claude (Haiku 4.5) Massage Bot & Admin API",
-    description="Backend API for Twilio SMS/WhatsApp bot powered by Anthropic Claude (Haiku 4.5) with PWA Admin Dashboard",
+    description="Backend API for Telnyx SMS bot powered by Anthropic Claude (Haiku 4.5) with PWA Admin Dashboard",
     version="1.0.0",
     lifespan=lifespan
 )

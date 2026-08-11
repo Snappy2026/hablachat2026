@@ -106,7 +106,7 @@ class SettingsOut(BaseModel):
     anthropic_api_key_configured: bool = False
     venice_api_key_configured: bool = False
     moonshot_api_key_configured: bool = False
-    twilio_configured: bool
+    telnyx_configured: bool
 
 class SettingsUpdate(BaseModel):
     auto_reply_enabled: Optional[bool] = None

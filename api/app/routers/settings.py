@@ -36,7 +36,7 @@ def get_settings(db: DBSession = Depends(get_db)):
     anthropic_ok = bool(env_settings.ANTHROPIC_API_KEY and not env_settings.ANTHROPIC_API_KEY.startswith("your_"))
     venice_ok = bool(env_settings.VENICE_API_KEY and not env_settings.VENICE_API_KEY.startswith("your_"))
     moonshot_ok = bool(env_settings.MOONSHOT_API_KEY and not env_settings.MOONSHOT_API_KEY.startswith("your_"))
-    twilio_ok = bool(env_settings.TWILIO_ACCOUNT_SID and not env_settings.TWILIO_ACCOUNT_SID.startswith("your_"))
+    telnyx_ok = bool(env_settings.TELNYX_API_KEY and not env_settings.TELNYX_API_KEY.startswith("your_"))
 
     return SettingsOut(
         auto_reply_enabled=auto_reply,
@@ -48,7 +48,7 @@ def get_settings(db: DBSession = Depends(get_db)):
         anthropic_api_key_configured=anthropic_ok,
         venice_api_key_configured=venice_ok,
         moonshot_api_key_configured=moonshot_ok,
-        twilio_configured=twilio_ok
+        telnyx_configured=telnyx_ok
     )
 
 @router.put("", response_model=SettingsOut)

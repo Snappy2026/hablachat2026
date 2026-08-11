@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session as DBSession, joinedload
 from app.database import get_db
 from app.models import ReviewItem, Message, Session, Booking
 from app.schemas import ReviewItemOut, ApproveReviewRequest
-from app.services.twilio_service import twilio_service
+from app.services.telnyx_service import telnyx_service
 from app.services.websocket_mgr import ws_manager
 
 logger = logging.getLogger("reviews_router")
@@ -66,11 +66,10 @@ async def approve_review(
     db.commit()
     db.refresh(outbound_msg)
 
-    # Dispatch via Twilio
-    twilio_sid = twilio_service.send_message(
+    # Dispatch via Telnyx
+    twilio_sid = telnyx_service.send_message(
         to_number=session_obj.phone_number,
-        body=send_text,
-        channel=session_obj.channel
+        body=send_text
     )
     outbound_msg.twilio_sid = twilio_sid
     db.commit()

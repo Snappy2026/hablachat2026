@@ -119,7 +119,7 @@ export default function App() {
   const handleApprove = async (reviewId, customReply) => {
     try {
       await approveReview(reviewId, customReply);
-      showToast('✅ Reply approved & sent via Twilio!');
+      showToast('✅ Reply approved & sent via Telnyx!');
       fetchReviews();
     } catch (err) {
       console.error('Error approving review:', err);

@@ -16,3 +16,6 @@ backend/venv/
 # OS / IDE
 .DS_Store
 .vscode/
+
+# Temp / Local Workspace Scratch
+scratch/

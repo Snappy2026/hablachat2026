@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.database import get_db
 from app.models import Session, Message
 from app.schemas import SessionOut, MessageOut, MessageCreate
-from app.services.twilio_service import twilio_service
+from app.services.telnyx_service import telnyx_service
 from app.services.websocket_mgr import ws_manager
 
 router = APIRouter(prefix="/api/sessions", tags=["Customer Conversations"])
@@ -60,11 +60,10 @@ async def send_manual_reply(
     db.commit()
     db.refresh(msg)
 
-    # Dispatch via Twilio
-    twilio_sid = twilio_service.send_message(
+    # Dispatch via Telnyx
+    twilio_sid = telnyx_service.send_message(
         to_number=session_obj.phone_number,
-        body=payload.content,
-        channel=session_obj.channel
+        body=payload.content
     )
     msg.twilio_sid = twilio_sid
     db.commit()

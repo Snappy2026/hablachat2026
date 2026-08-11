@@ -93,7 +93,7 @@ export default function SimulatorModal({ isOpen, onClose, onSuccess }) {
               <Sparkles className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-100 text-sm">Twilio Message Simulator</h3>
+              <h3 className="font-bold text-slate-100 text-sm">Telnyx Message Simulator</h3>
               <p className="text-[11px] text-slate-400">Test Claude (Haiku 4.5) AI response & review queue</p>
             </div>
           </div>

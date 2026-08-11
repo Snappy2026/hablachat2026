@@ -187,17 +187,17 @@ export default function OnboardingFlow({ onComplete, onBack }) {
     const emailToUse = email || localStorage.getItem('onboarding_email') || 'client@hablachat.app';
 
     try {
-      // 1. Purchase the selected phone number on Twilio and configure webhook forwarding
+      // 1. Purchase the selected phone number on Telnyx and configure webhook forwarding
       const purchaseRes = await purchasePhoneNumber(numToUse, country || 'GB');
       
       if (purchaseRes.status !== 'success') {
-        throw new Error(purchaseRes.error || 'Failed to purchase and provision the Twilio number. Please check your credentials/regulatory requirements.');
+        throw new Error(purchaseRes.error || 'Failed to purchase and provision the Telnyx number. Please check your credentials/regulatory requirements.');
       }
 
       const twilioSid = purchaseRes.twilio_sid || 'PN_demo_' + Math.random().toString(36).substring(7);
       localStorage.setItem('purchased_phone_number', numToUse);
 
-      // 2. Complete onboarding with the verified Twilio phone number and SID
+      // 2. Complete onboarding with the verified Telnyx phone number and SID
       await completeOnboarding({
         entrance_video_url: videoUrl || '',
         phone_number: numToUse,
@@ -227,7 +227,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
       console.error('Activation & Purchase Error:', err);
       
       // Extract the most descriptive error message
-      let displayError = 'Error setting up your Twilio/Stripe activation. Please try again.';
+      let displayError = 'Error setting up your Telnyx/Stripe activation. Please try again.';
       if (err.message && typeof err.message === 'string') {
         displayError = err.message;
       }

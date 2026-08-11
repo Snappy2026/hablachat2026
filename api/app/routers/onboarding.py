@@ -189,7 +189,7 @@ def update_client_status(client_id: int, payload: dict, db: DBSession = Depends(
 
 @router.post("/clients/{client_id}/phone")
 def update_client_phone(client_id: int, payload: dict, db: DBSession = Depends(get_db)):
-    """Master Admin: Reassign or update Twilio line for a model."""
+    """Master Admin: Reassign or update Telnyx line for a model."""
     new_phone = payload.get("phone_number")
     client = db.query(Client).filter(Client.id == client_id).first()
     if not client:

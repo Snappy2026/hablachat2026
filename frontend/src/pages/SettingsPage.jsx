@@ -63,7 +63,7 @@ export default function SettingsPage() {
   };
 
   const handleReassignPhone = async (clientId, currentPhone) => {
-    const newPhone = prompt('Enter new assigned Twilio Mobile Line for this model:', currentPhone || '+44 7791 126970');
+    const newPhone = prompt('Enter new assigned Telnyx Mobile Line for this model:', currentPhone || '+44 7791 126970');
     if (!newPhone) return;
     try {
       await updateClientPhone(clientId, newPhone.trim());
@@ -193,7 +193,7 @@ export default function SettingsPage() {
               <span className="truncate">{isMasterAdmin ? '👑 Master Agency Admin Portal' : 'Bot Control & Setup'}</span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5 break-words">
-              {isMasterAdmin ? 'Full control over client roster, system prompts, and Twilio lines' : 'Manage your active mobile line and message signature'}
+              {isMasterAdmin ? 'Full control over client roster, system prompts, and Telnyx lines' : 'Manage your active mobile line and message signature'}
             </p>
           </div>
           <button

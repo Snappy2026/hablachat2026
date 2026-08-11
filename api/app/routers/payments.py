@@ -50,7 +50,7 @@ def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_
             "payment_method_types[]": "card",
             "line_items[0][price_data][currency]": "gbp",
             "line_items[0][price_data][product_data][name]": "HablaChat - Weekly Membership",
-            "line_items[0][price_data][product_data][description]": "24/7 AI Enquiry Manager & Twilio Mobile Number",
+            "line_items[0][price_data][product_data][description]": "24/7 AI Enquiry Manager & Telnyx Mobile Number",
             "line_items[0][price_data][unit_amount]": charge_pence,
             "line_items[0][quantity]": 1,
             "mode": "payment",

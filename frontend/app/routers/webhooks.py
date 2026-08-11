@@ -8,7 +8,7 @@ from app.database import get_db
 from app.models import Session, Message, ReviewItem, Booking, BotSetting
 from app.schemas import SimulatorRequest
 from app.services.claude_engine import claude_engine
-from app.services.twilio_service import twilio_service
+from app.services.telnyx_service import telnyx_service
 from app.services.websocket_mgr import ws_manager
 
 logger = logging.getLogger("webhooks_router")
@@ -146,11 +146,10 @@ async def process_inbound_message(
         db.commit()
         db.refresh(bot_msg)
 
-        # Send via Twilio
-        twilio_sid = twilio_service.send_message(
+        # Send via Telnyx
+        twilio_sid = telnyx_service.send_message(
             to_number=session_obj.phone_number,
-            body=analysis.reply_text,
-            channel=session_obj.channel
+            body=analysis.reply_text
         )
         bot_msg.twilio_sid = twilio_sid
         db.commit()
@@ -195,26 +194,31 @@ async def process_inbound_message(
             "twilio_sid": twilio_sid
         }
 
-@router.post("/twilio")
-async def twilio_webhook(
+
+@router.post("/telnyx")
+async def telnyx_webhook(
     request: Request,
-    From: str = Form(...),
-    Body: str = Form(...),
-    ProfileName: Optional[str] = Form(None),
     db: DBSession = Depends(get_db)
 ):
     """
-    Standard Twilio Webhook Receiver for SMS & WhatsApp.
+    Telnyx Webhook Receiver for Instant SMS.
     """
-    channel = "whatsapp" if From.startswith("whatsapp:") else "sms"
-    res = await process_inbound_message(
-        db=db,
-        phone_number=From,
-        message_body=Body,
-        channel=channel,
-        client_name=ProfileName
-    )
-    return {"status": "ok", "result": res}
+    try:
+        data = await request.json()
+        payload = data.get("data", {}).get("payload", {})
+        from_num = payload.get("from", {}).get("phone_number", "")
+        text_body = payload.get("text", "")
+        if from_num and text_body:
+            res = await process_inbound_message(
+                db=db,
+                phone_number=from_num,
+                message_body=text_body,
+                channel="sms"
+            )
+            return {"status": "ok", "result": res}
+    except Exception as e:
+        logger.error(f"Telnyx webhook parse error: {e}")
+    return {"status": "ok"}
 
 @router.post("/simulator")
 async def simulator_webhook(

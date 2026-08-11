@@ -104,8 +104,9 @@ class SettingsOut(BaseModel):
     tone: str = "Warm & Luxurious Spa"
     custom_signature: Optional[str] = "thanks babe x"
     anthropic_api_key_configured: bool = False
+    venice_api_key_configured: bool = False
     moonshot_api_key_configured: bool = False
-    twilio_configured: bool
+    telnyx_configured: bool
 
 class SettingsUpdate(BaseModel):
     auto_reply_enabled: Optional[bool] = None
@@ -114,6 +115,8 @@ class SettingsUpdate(BaseModel):
     language: Optional[str] = None
     tone: Optional[str] = None
     custom_signature: Optional[str] = None
+    photo_urls: Optional[List[str]] = None
+    entrance_video_url: Optional[str] = None
 
 # Client Onboarding Models
 class ClientRegister(BaseModel):
@@ -121,6 +124,7 @@ class ClientRegister(BaseModel):
     email: str
     address: str
     postcode: str
+    passcode: Optional[str] = None
 
 class ClientOut(BaseModel):
     id: int
@@ -129,6 +133,7 @@ class ClientOut(BaseModel):
     address: str
     postcode: str
     entrance_video_url: Optional[str] = None
+    photo_urls: Optional[str] = None
     phone_number: Optional[str] = None
     twilio_number_sid: Optional[str] = None
     country_code: str = "GB"
@@ -155,9 +160,12 @@ class PhoneNumberSearchResult(BaseModel):
 class PhoneNumberPurchaseRequest(BaseModel):
     phone_number: str
     country_code: str = "GB"
+    bundle_sid: Optional[str] = None
+    address_sid: Optional[str] = None
 
 class OnboardingCompleteRequest(BaseModel):
     entrance_video_url: Optional[str] = None
+    photo_urls: Optional[List[str]] = None
     phone_number: Optional[str] = None
     twilio_number_sid: Optional[str] = None
     country_code: str = "GB"
