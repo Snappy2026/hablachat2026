@@ -137,7 +137,7 @@ class ClaudeEngine:
                         return ClaudeAnalysisOutput(**data)
 
                 # Check if using Anthropic API key
-                elif anth_key and not anth_key.startswith("your_"):
+                if anth_key and not anth_key.startswith("your_"):
                     headers = {
                         "x-api-key": anth_key,
                         "anthropic-version": "2023-06-01",
@@ -163,7 +163,7 @@ class ClaudeEngine:
                         return ClaudeAnalysisOutput(**data)
 
                 # Check if using OpenAI API key
-                elif self.openai_key and not self.openai_key.startswith("your_"):
+                if self.openai_key and not self.openai_key.startswith("your_"):
                     headers = {
                         "Authorization": f"Bearer {self.openai_key}",
                         "Content-Type": "application/json"

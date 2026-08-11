@@ -137,7 +137,7 @@ class ClaudeEngine:
                         return ClaudeAnalysisOutput(**data)
 
                 # Check if using Anthropic API key
-                elif anth_key and not anth_key.startswith("your_"):
+                if anth_key and not anth_key.startswith("your_"):
                     headers = {
                         "x-api-key": anth_key,
                         "anthropic-version": "2023-06-01",
@@ -163,33 +163,7 @@ class ClaudeEngine:
                         return ClaudeAnalysisOutput(**data)
 
                 # Check if using OpenAI API key
-                elif self.openai_key and not self.openai_key.startswith("your_"):
-                    headers = {
-                        "x-api-key": anth_key,
-                        "anthropic-version": "2023-06-01",
-                        "content-type": "application/json"
-                    }
-                    endpoint = f"{self.base_url.rstrip('/')}/messages"
-                    payload = {
-                        "model": self.model,
-                        "max_tokens": 1024,
-                        "temperature": 0.3,
-                        "system": system_prompt,
-                        "messages": formatted_messages
-                    }
-                    response = requests.post(endpoint, headers=headers, json=payload, timeout=15)
-                    if response.status_code == 200:
-                        resp_data = response.json()
-                        content_text = resp_data["content"][0]["text"].strip()
-                        if "```" in content_text:
-                            content_text = content_text.split("```")[1]
-                            if content_text.startswith("json"):
-                                content_text = content_text[4:].strip()
-                        data = json.loads(content_text)
-                        return ClaudeAnalysisOutput(**data)
-
-                # Check if using OpenAI API key
-                elif self.openai_key and not self.openai_key.startswith("your_"):
+                if self.openai_key and not self.openai_key.startswith("your_"):
                     headers = {
                         "Authorization": f"Bearer {self.openai_key}",
                         "Content-Type": "application/json"
@@ -252,12 +226,52 @@ class ClaudeEngine:
             "i am outside", "here now", "im here", "i am here", "which door", "door number", "buzz", "where do i go"
         ]
         if any(w in lower for w in street_arrival_keywords):
+            video_note = ""
+            try:
+                from app.database import SessionLocal
+                from app.models import Client
+                db = SessionLocal()
+                active_client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+                if active_client and active_client.entrance_video_url:
+                    video_note = f"\n\nEntrance Video: {active_client.entrance_video_url}"
+                db.close()
+            except Exception:
+                pass
+
             return ClaudeAnalysisOutput(
-                reply_text="Hi babe, I'm door number 5! Just buzz when you get to the door",
+                reply_text=f"Hi babe, I'm door number 5! Just buzz when you get to the door{video_note}\n\nthanks babe x",
                 intent="general_faq",
                 confidence=0.98,
                 requires_human_review=False,
-                review_reason="Street arrival confirmed; door number and buzz instructions provided.",
+                review_reason="Street arrival confirmed; door number and entrance video provided.",
+                extracted_booking=None
+            )
+
+        # Model Photo Gallery Request
+        photo_keywords = ["photo", "photos", "pic", "pics", "picture", "pictures", "send photos", "send pics", "photos of you", "pics of you", "see pics", "see photos"]
+        if any(w in lower for w in photo_keywords):
+            photo_reply = "Hi babe, here are my photos! x"
+            try:
+                from app.database import SessionLocal
+                from app.models import Client
+                import json
+                db = SessionLocal()
+                active_client = db.query(Client).filter(Client.status == "active").order_by(Client.id.desc()).first()
+                if active_client and active_client.photo_urls:
+                    urls = json.loads(active_client.photo_urls)
+                    if urls and len(urls) > 0:
+                        formatted_links = "\n".join([f"• {u}" for u in urls])
+                        photo_reply = f"Hi babe, here are my photos:\n{formatted_links}\n\nthanks babe x"
+                db.close()
+            except Exception:
+                pass
+
+            return ClaudeAnalysisOutput(
+                reply_text=photo_reply,
+                intent="general_faq",
+                confidence=0.98,
+                requires_human_review=False,
+                review_reason="Model photo gallery request answered.",
                 extracted_booking=None
             )
 
