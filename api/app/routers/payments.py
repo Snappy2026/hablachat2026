@@ -40,11 +40,11 @@ def create_checkout_session(payload: CheckoutRequest, db: Session = Depends(get_
             "Authorization": f"Bearer {settings.STRIPE_SECRET_KEY}",
             "Content-Type": "application/x-www-form-urlencoded"
         }
-        charge_str = get_setting(db, "weekly_charge", "0.05")
+        charge_str = get_setting(db, "weekly_charge", "0.30")
         try:
             charge_pence = int(float(charge_str) * 100)
         except Exception:
-            charge_pence = 5
+            charge_pence = 30
 
         data = {
             "payment_method_types[]": "card",

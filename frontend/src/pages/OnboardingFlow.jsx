@@ -212,7 +212,7 @@ export default function OnboardingFlow({ onComplete, onBack }) {
         payment_method: paymentMethod || 'card',
         card_last4: '4242',
         plan_type: 'weekly',
-        amount: weeklyCharge?.weekly_charge || 0.05,
+        amount: weeklyCharge?.weekly_charge || 0.30,
         currency: 'GBP'
       });
 

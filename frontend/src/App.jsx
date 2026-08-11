@@ -19,7 +19,7 @@ export default function App() {
   // App view: 'landing' | 'onboarding' | 'dashboard' | 'public_chat'
   const [appView, setAppView] = useState('landing');
   const [chatModelName, setChatModelName] = useState('Anna');
-  const [weeklyCharge, setWeeklyCharge] = useState(0.05);
+  const [weeklyCharge, setWeeklyCharge] = useState(0.30);
 
   const [activeTab, setActiveTab] = useState('messages');
   const [reviews, setReviews] = useState([]);
